@@ -165,9 +165,9 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 
 ### 6.6 Members
 - Top bar title "Members". Admins see a yellow "+" button.
-- Search field, tabs **All Members** and **By Role**.
+- Search field, tabs **All Members** and **By Role** (grouped by position).
 - Each row: photo, name, a position tag, and a three-dot menu.
-- Admins see "Remove member" in the menu, which asks for confirmation.
+- Admins see "Edit member" and "Remove member" in the menu; removing asks for confirmation.
 - "Add member" sheet (admin only): name, email, position, permission. The member sets their own password the first time they sign in.
 
 ### 6.7 More (Notifications, Settings)

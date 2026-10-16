@@ -103,6 +103,7 @@ All routes require a signed-in member unless noted. Return JSON. Validate input.
 | `DELETE /api/services/:id/lineup/songs/:songId` | songleader, admin | Remove |
 | `GET /api/members` | member | List members |
 | `POST /api/members` | admin | Add a member by email (they set their own password on first sign-in) |
+| `PATCH /api/members/:id` | admin | Edit a member's name, position or permission |
 | `DELETE /api/members/:id` | admin | Remove a member |
 | `GET /api/notifications` | member | Own notifications |
 | `PATCH /api/notifications/:id/read` | member | Mark read |
@@ -117,21 +118,22 @@ Permission checks live in one middleware. Never trust the client for permissions
 
 ### Phase 1: Login page frontend and app shell
 The default login page and backend auth already exist. Build the **frontend** for them.
-- [ ] Splash screen and login screen exactly as in `DESIGN.md`
-- [ ] Email and password form wired to `POST /api/auth/member/login`, plus the "First time here?" setup path for an added member
-- [ ] Error states: email not on the member list, wrong password, network failure
-- [ ] Protected route wrapper: signed-out users go to login
-- [ ] App shell: top bar, bottom tab bar (5 tabs), safe-area spacing
-- [ ] Theme tokens and fonts installed (`DESIGN.md`)
+- [x] Splash screen and login screen exactly as in `DESIGN.md`
+- [x] Email and password form wired to `POST /api/auth/member/login`, plus the "First time here?" setup path for an added member
+- [x] Error states: email not on the member list, wrong password, network failure
+- [x] Protected route wrapper: signed-out users go to login
+- [x] App shell: top bar, bottom tab bar (5 tabs), safe-area spacing
+- [x] Theme tokens and fonts installed (`DESIGN.md`)
 
 **Done when:** a member can sign in with their email and password on a 390 px screen, land on an empty Home, and move between all five tabs.
 
 ### Phase 2: Members and permissions
-- [ ] Member model, seed with a first admin from `ADMIN_EMAILS`
-- [ ] Permission middleware (`admin`, `songleader`, `member`)
-- [ ] Members screen: search, filter by role, member cards
-- [ ] Add member and remove member (admin only), with confirmation on remove
-- [ ] Hide admin controls from people who lack permission, and enforce on the server
+- [x] Member model, seed with a first admin from `ADMIN_EMAILS`
+- [x] Permission middleware (`admin`, `songleader`, `member`)
+- [x] Members screen: search, filter by role, member cards
+- [x] Add member and remove member (admin only), with confirmation on remove
+- [x] Edit a member's name, position or permission (added to Phase 2 at the owner's request; the email stays fixed because it is the sign-in identity)
+- [x] Hide admin controls from people who lack permission, and enforce on the server
 
 **Done when:** an admin can add and remove members; a normal member cannot, even by calling the API directly.
 

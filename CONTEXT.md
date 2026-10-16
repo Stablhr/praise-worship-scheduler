@@ -78,7 +78,7 @@ There is **no multimedia role**. It was removed.
 3. **Assigned**: who holds each role for a given service.
 4. **Lineups**: songs per service, labeled Praise/Fast or Worship/Slow, with links.
 5. **Photo paste**: copy and paste a photo showing the assigned volunteers. Open to every member. On phones, also offer a button to pick a photo from the gallery, because pasting an image is hard on mobile.
-6. **Members**: add and delete members (Chairman and Pastor only).
+6. **Members**: add, edit and delete members (Chairman and Pastor only).
 7. **Settings**: customizable settings, plus profile settings and system settings.
 8. **Notifications**: every member is notified 2-3 days before a service. Also notify when a lineup is added or updated and when an assignment changes.
 
