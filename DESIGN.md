@@ -121,15 +121,20 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 - Blue and yellow wave at the bottom.
 - Show for about 1.2 seconds, then go to Login or Home.
 
-### 6.2 Login (the first piece to build)
+### 6.2 Login
 - White card area with the same wave at the bottom.
 - Logo, "UCJM" title, subtitle "Praise & Worship Ministry".
 - Heading "Welcome back!" and one line: "Sign in to see who is serving and what songs are planned."
-- One large pill button: **Continue with Google** (Google "G" icon, white button with blue border; or blue button with white text).
-- Small text under the button: "Only members added by the Chairman or Pastor can sign in."
-- Error banner (red tint) if the email is not on the member list: "This Google account is not on the team list. Please ask the Chairman or Pastor to add you."
-- Loading state: button shows a spinner and is disabled.
-- No email and password fields. Sign-in is Google only.
+- Two fields, 48 high and rounded with 16 side padding: **Email** and **Password**. The password field has a small Show/Hide toggle.
+- One large pill button: **Sign in** (blue button, white text).
+- Under the button: "First time here? **Set up your account**". This switches the same screen into setup mode for a member an admin just added: fields **Your name**, **Email**, **Password**, **Repeat password**, and the button reads **Set up my account**.
+- Small text under the form: "Only members added by the Chairman or Pastor can sign in."
+- Error banner (red tint) above the fields:
+  - Email not on the member list: "This email is not on the team list. Please ask the Chairman or Pastor to add you."
+  - Wrong password: "Invalid email or password. Please try again."
+  - Added but no password yet: "You have not set up your account yet. Tap 'First time here?' to choose a password."
+- Field level hints instead of the banner for a password that breaks the rules (8 or more characters, a capital, a small letter, a number and a symbol).
+- Loading state: the button shows a spinner and is disabled.
 
 ### 6.3 Home (Dashboard)
 - Blue top bar with logo, bell and profile photo.
@@ -163,7 +168,7 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 - Search field, tabs **All Members** and **By Role**.
 - Each row: photo, name, a position tag, and a three-dot menu.
 - Admins see "Remove member" in the menu, which asks for confirmation.
-- "Add member" sheet (admin only): name, Google email, position, permission.
+- "Add member" sheet (admin only): name, email, position, permission. The member sets their own password the first time they sign in.
 
 ### 6.7 More (Notifications, Settings)
 - A simple list: Notifications (with unread count), Settings, Help and Support, Log out (red).

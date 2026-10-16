@@ -27,7 +27,7 @@ The app must be an **official installable app** (Android and iPhone), not a PWA.
 | **Song leader** | Add, edit and remove lineup songs and their links |
 | **Every member** | View the dashboard, schedule, assignments, lineups and members. Paste a photo showing the assigned volunteers. Edit their own profile and settings. Receive notifications |
 
-Members sign in with their **Google account**.
+Members sign in with their **email and a password**. An admin has to add the email first.
 
 ---
 
@@ -90,7 +90,7 @@ There is **no multimedia role**. It was removed.
 - **Backend:** Express.js
 - **Database:** MongoDB (already connected; user data is stored there)
 - **Mobile wrapper:** Capacitor (Android and iPhone from the same Next.js codebase)
-- **Auth:** Google sign-in
+- **Auth:** email and password. No Google sign-in. Only emails an admin has added can sign in
 - **Starting point:** a VS Code project folder already exists with a **default login page** and the MongoDB connection. The **login page frontend** is the one piece still missing. Inspect the existing code before changing anything, and do not rewrite working auth or database code.
 
 ---
@@ -105,7 +105,7 @@ Blue and yellow brand colors, taken from a mockup the user supplied. Clean, roun
 
 - Official app via Capacitor, not a PWA.
 - Next.js + Express.js + MongoDB.
-- Google sign-in.
+- Email and password sign-in (Google sign-in was dropped).
 - Chairman and Pastor assign roles and manage members.
 - Everyone can paste photos.
 - Lineups have no song limit.
@@ -122,7 +122,7 @@ Blue and yellow brand colors, taken from a mockup the user supplied. Clean, roun
 | Which phones | Configure Capacitor for **both Android and iPhone**. Test on Android first |
 | App stores or direct sharing | Not decided. Do not build store-publishing steps yet |
 | Default service times | Saturday 3:00 PM, Sunday 9:00 AM, both editable in Settings |
-| Who can sign in | Only people whose Google email an admin has added. The very first admin comes from an `ADMIN_EMAILS` environment variable |
+| Who can sign in | Only emails an admin has added. An added member sets their own password the first time they sign in. The very first admin comes from an `ADMIN_EMAILS` environment variable |
 | Reminder timing | One reminder 3 days before and one 2 days before, at 9:00 AM Asia/Manila time, configurable by admins |
 
 If the user answers any of these, update this table.

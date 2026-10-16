@@ -48,7 +48,8 @@ Adapt to the existing folders. This is the target shape:
 ## 2. Data models (MongoDB / Mongoose)
 
 **Member**
-- `name`, `email` (Google email, unique), `photoUrl`, `googleId`
+- `name`, `email` (unique), `photoUrl`
+- `passwordHash` (null until the member sets their own password on first sign-in), `activatedAt`
 - `permission`: `admin` | `songleader` | `member`
 - `position` (optional label such as Chairman, Pastor, Guitarist)
 - `pushTokens` (array), `createdAt`
@@ -83,7 +84,10 @@ All routes require a signed-in member unless noted. Return JSON. Validate input.
 
 | Method and path | Who | Purpose |
 | --- | --- | --- |
-| `POST /api/auth/google` | public | Verify Google token, find member by email, return session |
+| `POST /api/auth/member/register` | public | First sign-in of an added member: set their name and password, return session |
+| `POST /api/auth/member/login` | public | Sign in with email and password |
+| `POST /api/auth/logout` | member | End the session |
+| `POST /api/auth/refresh` | public | Refresh the session cookies |
 | `GET /api/me` | member | Current member |
 | `PATCH /api/me` | member | Update own profile and preferences |
 | `GET /api/dashboard` | member | Next Sunday and next Saturday with assignments, latest updates |
@@ -98,7 +102,7 @@ All routes require a signed-in member unless noted. Return JSON. Validate input.
 | `PATCH /api/services/:id/lineup/songs/:songId` | songleader, admin | Edit or reorder |
 | `DELETE /api/services/:id/lineup/songs/:songId` | songleader, admin | Remove |
 | `GET /api/members` | member | List members |
-| `POST /api/members` | admin | Add a member by Google email |
+| `POST /api/members` | admin | Add a member by email (they set their own password on first sign-in) |
 | `DELETE /api/members/:id` | admin | Remove a member |
 | `GET /api/notifications` | member | Own notifications |
 | `PATCH /api/notifications/:id/read` | member | Mark read |
@@ -114,13 +118,13 @@ Permission checks live in one middleware. Never trust the client for permissions
 ### Phase 1: Login page frontend and app shell
 The default login page and backend auth already exist. Build the **frontend** for them.
 - [ ] Splash screen and login screen exactly as in `DESIGN.md`
-- [ ] "Continue with Google" button wired to the existing auth
-- [ ] Error states: email not on the member list, network failure
+- [ ] Email and password form wired to `POST /api/auth/member/login`, plus the "First time here?" setup path for an added member
+- [ ] Error states: email not on the member list, wrong password, network failure
 - [ ] Protected route wrapper: signed-out users go to login
 - [ ] App shell: top bar, bottom tab bar (5 tabs), safe-area spacing
 - [ ] Theme tokens and fonts installed (`DESIGN.md`)
 
-**Done when:** a member can sign in with Google on a 390 px screen, land on an empty Home, and move between all five tabs.
+**Done when:** a member can sign in with their email and password on a 390 px screen, land on an empty Home, and move between all five tabs.
 
 ### Phase 2: Members and permissions
 - [ ] Member model, seed with a first admin from `ADMIN_EMAILS`
