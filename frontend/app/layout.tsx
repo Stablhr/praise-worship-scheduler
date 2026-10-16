@@ -1,28 +1,27 @@
-import type {Metadata} from 'next';
-import {Geist, Geist_Mono, JetBrains_Mono} from 'next/font/google';
+import type {Metadata, Viewport} from 'next';
+import {Inter, Poppins} from 'next/font/google';
 import './globals.css';
 import {cn} from '@/lib/utils';
 import ReactQueryProvider from '@/lib/provider/ReactQueryProvider';
 
-const jetbrainsMono = JetBrains_Mono({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-mono'
+  variable: '--font-inter',
+  display: 'swap'
 });
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin']
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-poppins',
+  display: 'swap'
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://yourdomain.vercel.app'), // Replace with your actual URL
-  title: 'App name',
-  description: 'App name description',
+  title: 'UCJM Praise & Worship',
+  description:
+    'Unity in Christ Jesus Ministries — who is serving, which songs are planned, and when the next service is.',
   icons: {
     icon: [
       {url: '/assets/logo.png', type: 'image/png', sizes: '32x32'},
@@ -31,8 +30,9 @@ export const metadata: Metadata = {
     apple: '/assets/logo.png'
   },
   openGraph: {
-    title: 'App name',
-    description: 'App name description',
+    title: 'UCJM Praise & Worship',
+    description:
+      'Unity in Christ Jesus Ministries — who is serving, which songs are planned, and when the next service is.',
     url: 'https://yourdomain.vercel.app/',
     type: 'website',
     images: [
@@ -40,10 +40,18 @@ export const metadata: Metadata = {
         url: '/assets/logo.png', // Replace with your actual image path of logo
         width: 1200,
         height: 630,
-        alt: 'App name Preview'
+        alt: 'UCJM Praise & Worship'
       }
     ]
   }
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  // Lets the app use the full screen on phones with a notch (DESIGN.md section 9)
+  viewportFit: 'cover',
+  themeColor: '#0b3d91'
 };
 
 export default function RootLayout({
@@ -54,16 +62,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(
-        'h-full',
-        'antialiased',
-        geistSans.variable,
-        geistMono.variable,
-        'font-mono',
-        jetbrainsMono.variable
-      )}
+      className={cn('h-full', inter.variable, poppins.variable)}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-dvh flex-col">
         <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>
