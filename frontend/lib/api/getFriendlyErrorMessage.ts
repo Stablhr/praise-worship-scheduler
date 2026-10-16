@@ -77,6 +77,12 @@ export function getFriendlyErrorMessage(
         return 'You have not set up your account yet. Tap “First time here?” to choose a password.';
       case 'MEMBER_NOT_FOUND':
         return 'We could not find your member record. Please ask the Chairman or Pastor to add you again.';
+      case 'MEMBER_EXISTS':
+        return 'This email is already on the team list.';
+      case 'CANNOT_REMOVE_SELF':
+        return 'You cannot remove your own account.';
+      case 'LAST_ADMIN':
+        return 'There must always be at least one admin on the team.';
       case 'FORBIDDEN':
         return 'You do not have permission to do that.';
       default:

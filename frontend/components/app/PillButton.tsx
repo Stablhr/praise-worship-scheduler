@@ -6,8 +6,8 @@ import {Button} from '@/components/ui/button';
 import {cn} from '@/lib/utils';
 
 type PillButtonProps = {
-  /** `primary` is the filled blue button, `outline` is the white button with a blue border. */
-  variant?: 'primary' | 'outline';
+  /** `primary` is the filled blue button, `outline` is the white button with a blue border, `danger` is for destructive actions such as removing a member. */
+  variant?: 'primary' | 'outline' | 'danger';
   /** DESIGN.md section 4: form buttons are full width. */
   fullWidth?: boolean;
   /** Shows a spinner and blocks taps while work is in flight. */
@@ -39,6 +39,8 @@ export function PillButton({
           'bg-primary text-primary-foreground hover:bg-primary-dark',
         variant === 'outline' &&
           'border-primary/25 bg-surface text-primary hover:bg-secondary',
+        variant === 'danger' &&
+          'bg-danger text-white hover:bg-danger/90 focus-visible:ring-danger',
         className
       )}
       disabled={disabled || isLoading}
