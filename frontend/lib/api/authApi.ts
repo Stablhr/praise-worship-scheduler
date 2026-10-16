@@ -22,11 +22,21 @@ type LoginResponse = {
 };
 type LogoutResponse = {message: string};
 
+export type MemberPermission = 'admin' | 'songleader' | 'member';
+
+/** The signed-in member. `type` is 'member' for people who signed in with Google. */
+export type MeUser = {
+  id: string;
+  type: 'user' | 'admin' | 'member';
+  name?: string;
+  email?: string;
+  permission?: MemberPermission;
+  photoUrl?: string;
+  position?: string;
+};
+
 type MeResponse = {
-  user: {
-    id: string;
-    type: 'admin' | 'user';
-  };
+  user: MeUser;
 };
 
 export async function registerCustomer(data: RegisterRequest) {
@@ -57,6 +67,18 @@ export async function login(params: {email: string; password: string}) {
 
 export async function logout() {
   const res = await httpClient.post<LogoutResponse>('/auth/logout');
+  return res.data;
+}
+
+/**
+ * Signs in with Google. Send either the authorization code from the Google
+ * popup or an ID token (used by the Capacitor plugin from Phase 8 onwards).
+ */
+export async function signInWithGoogle(params: {
+  credential?: string;
+  code?: string;
+}) {
+  const res = await httpClient.post<MeResponse>('/auth/google', params);
   return res.data;
 }
 

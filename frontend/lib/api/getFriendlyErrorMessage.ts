@@ -71,6 +71,18 @@ export function getFriendlyErrorMessage(
         return 'Too many requests. Please wait a moment and try again.';
       case 'NETWORK_ERROR':
         return 'Network error. Please check your connection and try again.';
+      case 'NOT_ON_TEAM_LIST':
+        return 'This Google account is not on the team list. Please ask the Chairman or Pastor to add you.';
+      case 'INVALID_GOOGLE_TOKEN':
+        return 'Google could not confirm your sign-in. Please try again.';
+      case 'GOOGLE_NOT_CONFIGURED':
+        return 'Google sign-in is not set up yet. Please ask the Chairman or Pastor.';
+      case 'GOOGLE_SCRIPT_UNAVAILABLE':
+        return 'Google sign-in could not start. Please check your connection and try again.';
+      case 'MEMBER_NOT_FOUND':
+        return 'We could not find your member record. Please ask the Chairman or Pastor to add you again.';
+      case 'FORBIDDEN':
+        return 'You do not have permission to do that.';
       default:
         break;
     }
