@@ -21,3 +21,9 @@ Full-stack auth boilerplate — Next.js 16 frontend + Express.js backend with JW
 ## Commits
 
 Use conventional commits: `fix:`, `feat:`, `refactor:`, `chore:`, `docs:`
+
+## Commits & Pushing
+
+- Never run `git push`. The repository owner reviews and pushes every change.
+- Commit each finished change locally with a conventional commit message, splitting unrelated changes into separate commits.
+- Keep the working tree clean (or report exactly what is left uncommitted) so `git status` always shows a reviewable state.
