@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import {UpdateQuery} from 'mongoose';
 import {env} from '../config/env';
 import {ApiError} from '../utils/error';
 import {ErrorCodes} from '../constants/errorCodes';
@@ -132,5 +133,127 @@ export const memberService = {
     }
 
     return member;
+  },
+
+  /** The whole team, for the Members screen. */
+  async list(): Promise<MemberDocument[]> {
+    return memberRepository.list();
+  },
+
+  /**
+   * Adds someone to the team list. They have no password yet, so they set one
+   * themselves the first time they sign in (memberService.register).
+   */
+  async add(input: {
+    name: string;
+    email: string;
+    position?: string;
+    permission: MemberPermission;
+  }): Promise<MemberDocument> {
+    const email = input.email.trim().toLowerCase();
+    const existing = await memberRepository.findByEmail(email);
+
+    if (existing) {
+      throw new ApiError(
+        409,
+        ErrorCodes.MEMBER_EXISTS,
+        'This email is already on the team list'
+      );
+    }
+
+    return memberRepository.create({
+      name: input.name.trim(),
+      email,
+      position: cleanPosition(input.position),
+      permission: input.permission,
+      passwordHash: null,
+      activatedAt: null,
+      pushTokens: []
+    });
+  },
+
+  /** Edits name, position or permission. The email is the sign-in identity, so it is not editable here. */
+  async update(
+    memberId: string,
+    changes: {name?: string; position?: string; permission?: MemberPermission}
+  ): Promise<MemberDocument> {
+    const member = await memberRepository.findById(memberId);
+
+    if (!member) {
+      throw new ApiError(404, ErrorCodes.MEMBER_NOT_FOUND, 'Member not found');
+    }
+
+    if (
+      changes.permission &&
+      changes.permission !== 'admin' &&
+      member.permission === 'admin'
+    ) {
+      await assertNotLastAdmin('There must always be at least one admin');
+    }
+
+    const update: UpdateQuery<MemberDocument> = {};
+
+    if (changes.name !== undefined) {
+      update.$set = {...update.$set, name: changes.name.trim()};
+    }
+
+    if (changes.permission !== undefined) {
+      update.$set = {...update.$set, permission: changes.permission};
+    }
+
+    if (changes.position !== undefined) {
+      const position = cleanPosition(changes.position);
+
+      if (position) {
+        update.$set = {...update.$set, position};
+      } else {
+        update.$unset = {position: 1};
+      }
+    }
+
+    const updated = await memberRepository.updateById(memberId, update);
+
+    if (!updated) {
+      throw new ApiError(404, ErrorCodes.MEMBER_NOT_FOUND, 'Member not found');
+    }
+
+    return updated;
+  },
+
+  /** Removes a member for good, so they can no longer sign in. */
+  async remove(memberId: string, actorId: string): Promise<void> {
+    if (memberId === actorId) {
+      throw new ApiError(
+        400,
+        ErrorCodes.CANNOT_REMOVE_SELF,
+        'You cannot remove your own account'
+      );
+    }
+
+    const member = await memberRepository.findById(memberId);
+
+    if (!member) {
+      throw new ApiError(404, ErrorCodes.MEMBER_NOT_FOUND, 'Member not found');
+    }
+
+    if (member.permission === 'admin') {
+      await assertNotLastAdmin('There must always be at least one admin');
+    }
+
+    await memberRepository.deleteById(memberId);
   }
 };
+
+/** Empty or missing means the member has no position label yet. */
+function cleanPosition(position?: string): string | undefined {
+  const value = position?.trim();
+  return value ? value : undefined;
+}
+
+async function assertNotLastAdmin(message: string) {
+  const adminCount = await memberRepository.countAdmins();
+
+  if (adminCount <= 1) {
+    throw new ApiError(409, ErrorCodes.LAST_ADMIN, message);
+  }
+}
