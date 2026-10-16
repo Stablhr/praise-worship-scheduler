@@ -1,6 +1,7 @@
 import {Request, Response, NextFunction} from 'express';
 import {CookieOptions} from 'express';
 import {authService} from '../services/auth.service';
+import {memberService, toMemberProfile} from '../services/member.service';
 import {ApiError} from '../utils/error';
 import {ErrorCodes} from '../constants/errorCodes';
 import {env} from '../config/env';
@@ -13,6 +14,23 @@ const COOKIE_OPTIONS: CookieOptions = {
   path: '/'
 };
 
+const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+function setSessionCookies(
+  res: Response,
+  tokens: {accessToken: string; refreshToken: string}
+) {
+  res.cookie(ACCESS_TOKEN_COOKIE, tokens.accessToken, {
+    ...COOKIE_OPTIONS,
+    maxAge: ACCESS_TOKEN_MAX_AGE
+  });
+  res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, {
+    ...COOKIE_OPTIONS,
+    maxAge: REFRESH_TOKEN_MAX_AGE
+  });
+}
+
 export const authController = {
   async me(req: Request, res: Response, next: NextFunction) {
     try {
@@ -24,12 +42,31 @@ export const authController = {
         throw new ApiError(401, ErrorCodes.UNAUTHORIZED, 'Invalid token');
       }
 
+      if (req.auth.type === 'member') {
+        const member = await memberService.getProfile(req.auth.userId);
+        res.status(200).json({user: toMemberProfile(member)});
+        return;
+      }
+
       res.status(200).json({
         user: {
           id: req.auth.userId,
           type: req.auth.type
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async google(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {member, accessToken, refreshToken} =
+        await memberService.signInWithGoogle(req.body);
+
+      setSessionCookies(res, {accessToken, refreshToken});
+
+      res.status(200).json({user: toMemberProfile(member)});
     } catch (error) {
       next(error);
     }
@@ -67,16 +104,7 @@ export const authController = {
       const {accessToken, refreshToken, user, userType} =
         await authService.login(req.body.email, req.body.password);
 
-      const opts = COOKIE_OPTIONS;
-
-      res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
-        ...opts,
-        maxAge: 15 * 60 * 1000
-      });
-      res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
-        ...opts,
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      });
+      setSessionCookies(res, {accessToken, refreshToken});
 
       res.status(200).json({
         user: {
@@ -102,14 +130,9 @@ export const authController = {
 
       const result = await authService.refreshAccessToken(refreshToken);
 
-      const opts = COOKIE_OPTIONS;
-      res.cookie(ACCESS_TOKEN_COOKIE, result.accessToken, {
-        ...opts,
-        maxAge: 15 * 60 * 1000
-      });
-      res.cookie(REFRESH_TOKEN_COOKIE, result.refreshToken, {
-        ...opts,
-        maxAge: 7 * 24 * 60 * 60 * 1000
+      setSessionCookies(res, {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
       });
 
       res.status(200).json({message: 'Refreshed'});
@@ -183,6 +206,14 @@ export const authController = {
     try {
       if (!req.auth) {
         throw new ApiError(401, ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+      }
+
+      if (req.auth.type === 'member') {
+        throw new ApiError(
+          403,
+          ErrorCodes.FORBIDDEN,
+          'Members sign in with Google and have no password'
+        );
       }
 
       await authService.changePassword(

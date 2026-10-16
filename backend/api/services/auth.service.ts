@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import {env} from '../config/env';
 import {userRepository} from '../repositories/user.repository';
 import {adminRepository} from '../repositories/admin.repository';
+import {memberRepository} from '../repositories/member.repository';
 import {ApiError} from '../utils/error';
 import {emailService} from './email.service';
 import {blocklistService} from './blocklist.service';
@@ -20,7 +21,7 @@ function getVerificationExpiry(minutes: number) {
 
 type RefreshTokenPayload = {
   userId: string;
-  type: 'user' | 'admin';
+  type: 'user' | 'admin' | 'member';
 };
 
 export const authService = {
@@ -297,15 +298,20 @@ export const authService = {
         env.JWT_REFRESH_SECRET
       ) as RefreshTokenPayload;
 
-      const account = await (payload.type === 'user'
-        ? userRepository.findById(payload.userId)
-        : adminRepository.findById(payload.userId));
+      const isMember = payload.type === 'member';
+
+      const account = isMember
+        ? await memberRepository.findById(payload.userId)
+        : payload.type === 'user'
+          ? await userRepository.findById(payload.userId)
+          : await adminRepository.findById(payload.userId);
 
       if (!account) {
         throw new ApiError(401, ErrorCodes.UNAUTHORIZED, 'Invalid token');
       }
 
-      if (!account.isVerified) {
+      // Members sign in with Google, so there is no email verification to wait for.
+      if (!isMember && !(account as {isVerified?: boolean}).isVerified) {
         throw new ApiError(403, ErrorCodes.NOT_VERIFIED, 'Email not verified');
       }
 

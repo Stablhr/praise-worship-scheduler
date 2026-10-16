@@ -5,9 +5,11 @@ import {ApiError} from '../utils/error';
 import {ACCESS_TOKEN_COOKIE} from '../constants/cookies';
 import {ErrorCodes} from '../constants/errorCodes';
 
+export type SessionUserType = 'user' | 'admin' | 'member';
+
 export type JwtPayload = {
   userId: string;
-  type?: 'user' | 'admin';
+  type?: SessionUserType;
 };
 
 declare global {

@@ -16,7 +16,12 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional(),
   COOKIE_SECURE: z.string().optional(),
   COOKIE_SAMESITE: z.enum(['strict', 'lax', 'none']).optional(),
-  CORS_ORIGINS: z.string().optional()
+  CORS_ORIGINS: z.string().optional(),
+  // Google sign-in (Google Cloud Console -> OAuth 2.0 Client ID -> Web application)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // Comma separated emails that become the first admins, e.g. "chairman@ucjm.org,pastor@ucjm.org"
+  ADMIN_EMAILS: z.string().optional()
 });
 
 const parsed = envSchema.safeParse(process.env);

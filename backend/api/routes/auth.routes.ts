@@ -10,7 +10,8 @@ import {
   forgotPasswordDto,
   resetPasswordDto,
   resendResetCodeDto,
-  changePasswordDto
+  changePasswordDto,
+  googleAuthDto
 } from '../dtos/auth.dto';
 import {
   authLimiter,
@@ -37,6 +38,14 @@ router.post(
   authController.resendVerification
 );
 router.post('/login', authLimiter, validate(loginDto), authController.login);
+
+// Google sign-in — the only way members sign in
+router.post(
+  '/google',
+  authActionLimiter,
+  validate(googleAuthDto),
+  authController.google
+);
 
 // password reset — strict limit
 router.post(
