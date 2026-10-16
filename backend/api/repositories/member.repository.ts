@@ -8,9 +8,11 @@ export const memberRepository = {
 
   create: (data: Partial<MemberDocument>) => MemberModel.create(data),
 
-  /** Keeps the name and photo in sync with the Google account on every sign-in. */
-  syncGoogleProfile: (
-    id: string,
-    data: Pick<MemberDocument, 'name' | 'googleId'> & {photoUrl?: string}
-  ) => MemberModel.findByIdAndUpdate(id, data, {new: true}).exec()
+  /** First sign-in setup: the member sets their own name and password. */
+  activate: (id: string, data: {name: string; passwordHash: string}) =>
+    MemberModel.findByIdAndUpdate(
+      id,
+      {...data, activatedAt: new Date()},
+      {new: true}
+    ).exec()
 };

@@ -59,10 +59,24 @@ export const authController = {
     }
   },
 
-  async google(req: Request, res: Response, next: NextFunction) {
+  async memberRegister(req: Request, res: Response, next: NextFunction) {
     try {
       const {member, accessToken, refreshToken} =
-        await memberService.signInWithGoogle(req.body);
+        await memberService.register(req.body);
+
+      setSessionCookies(res, {accessToken, refreshToken});
+
+      res.status(201).json({user: toMemberProfile(member)});
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async memberLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {member, accessToken, refreshToken} = await memberService.login(
+        req.body
+      );
 
       setSessionCookies(res, {accessToken, refreshToken});
 
@@ -212,7 +226,7 @@ export const authController = {
         throw new ApiError(
           403,
           ErrorCodes.FORBIDDEN,
-          'Members sign in with Google and have no password'
+          'Password change is not available for team members yet'
         );
       }
 

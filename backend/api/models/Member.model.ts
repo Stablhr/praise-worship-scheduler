@@ -3,12 +3,18 @@ import mongoose, {Schema} from 'mongoose';
 export type MemberPermission = 'admin' | 'songleader' | 'member';
 
 export interface MemberDocument extends mongoose.Document {
-  /** Full name taken from the Google account. */
+  /** Full name of the member. */
   name: string;
-  /** Google email. Only emails an admin added can sign in. */
+  /** Sign-in email. Only emails an admin added can sign in. */
   email: string;
+  /**
+   * bcrypt hash of the member's password.
+   * null means the admin added them but they have not set a password yet.
+   */
+  passwordHash: string | null;
+  /** Set when the member finishes their first sign-in setup. */
+  activatedAt: Date | null;
   photoUrl?: string;
-  googleId?: string;
   permission: MemberPermission;
   /** Optional label shown next to the name, such as Chairman, Pastor or Guitarist. */
   position?: string;
@@ -28,8 +34,9 @@ const MemberSchema = new Schema<MemberDocument>(
       lowercase: true,
       trim: true
     },
+    passwordHash: {type: String, default: null},
+    activatedAt: {type: Date, default: null},
     photoUrl: {type: String},
-    googleId: {type: String},
     permission: {
       type: String,
       enum: ['admin', 'songleader', 'member'],

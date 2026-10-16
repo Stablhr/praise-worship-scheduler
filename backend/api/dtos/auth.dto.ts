@@ -56,16 +56,16 @@ export const changePasswordDto = z.object({
   newPassword: passwordSchema
 });
 
-export const googleAuthDto = z
-  .object({
-    // ID token (Google Identity Services button or the Capacitor plugin)
-    credential: z.string().min(1).optional(),
-    // Authorization code from the Google popup flow
-    code: z.string().min(1).optional()
-  })
-  .refine(value => Boolean(value.credential || value.code), {
-    message: 'A Google credential or authorization code is required'
-  });
+export const memberRegisterDto = z.object({
+  name: z.string().min(1, 'Please enter your name'),
+  email: z.string().email('Please enter a valid email address'),
+  password: passwordSchema
+});
+
+export const memberLoginDto = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Please enter your password')
+});
 
 export type RegisterDto = z.infer<typeof registerDto>;
 export type VerifyDto = z.infer<typeof verifyDto>;
@@ -75,4 +75,5 @@ export type RefreshDto = z.infer<typeof refreshDto>;
 export type ForgotPasswordDto = z.infer<typeof forgotPasswordDto>;
 export type ResendResetCodeDto = z.infer<typeof resendResetCodeDto>;
 export type ResetPasswordDto = z.infer<typeof resetPasswordDto>;
-export type GoogleAuthDto = z.infer<typeof googleAuthDto>;
+export type MemberRegisterDto = z.infer<typeof memberRegisterDto>;
+export type MemberLoginDto = z.infer<typeof memberLoginDto>;

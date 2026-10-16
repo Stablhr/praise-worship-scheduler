@@ -1,13 +1,12 @@
-import {OAuth2Client} from 'google-auth-library';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import {env} from '../config/env';
 import {ApiError} from '../utils/error';
 import {ErrorCodes} from '../constants/errorCodes';
-import {
-  MemberDocument,
-  MemberPermission
-} from '../models/Member.model';
+import {MemberDocument, MemberPermission} from '../models/Member.model';
 import {memberRepository} from '../repositories/member.repository';
+
+const SALT_ROUNDS = 10;
 
 /** Shape returned to the app for the signed-in member. */
 export type MemberProfile = {
@@ -18,13 +17,6 @@ export type MemberProfile = {
   permission: MemberPermission;
   photoUrl?: string;
   position?: string;
-};
-
-type GoogleProfile = {
-  email: string;
-  name: string;
-  photoUrl?: string;
-  googleId?: string;
 };
 
 export function toMemberProfile(member: MemberDocument): MemberProfile {
@@ -39,102 +31,6 @@ export function toMemberProfile(member: MemberDocument): MemberProfile {
   };
 }
 
-function getGoogleClient(): OAuth2Client {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    throw new ApiError(
-      500,
-      ErrorCodes.GOOGLE_NOT_CONFIGURED,
-      'Google sign-in is not configured on the server'
-    );
-  }
-
-  return new OAuth2Client({
-    clientId: env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET
-  });
-}
-
-/** The popup flow sends an authorization code; the exchange happens here so the secret stays on the server. */
-async function exchangeCodeForIdToken(
-  client: OAuth2Client,
-  code: string
-): Promise<string> {
-  try {
-    const {tokens} = await client.getToken({
-      code,
-      redirect_uri: 'postmessage'
-    });
-
-    if (!tokens.id_token) {
-      throw new ApiError(
-        401,
-        ErrorCodes.INVALID_GOOGLE_TOKEN,
-        'Google did not return an identity token'
-      );
-    }
-
-    return tokens.id_token;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      401,
-      ErrorCodes.INVALID_GOOGLE_TOKEN,
-      'Google authorization code is invalid or expired'
-    );
-  }
-}
-
-async function verifyIdToken(
-  client: OAuth2Client,
-  idToken: string
-): Promise<GoogleProfile> {
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: env.GOOGLE_CLIENT_ID
-    });
-    const payload = ticket.getPayload();
-
-    if (!payload?.email) {
-      throw new ApiError(
-        401,
-        ErrorCodes.INVALID_GOOGLE_TOKEN,
-        'Google account has no email'
-      );
-    }
-
-    if (payload.email_verified === false) {
-      throw new ApiError(
-        401,
-        ErrorCodes.INVALID_GOOGLE_TOKEN,
-        'Google account email is not verified'
-      );
-    }
-
-    return {
-      email: payload.email.toLowerCase(),
-      name: payload.name?.trim() || payload.email.split('@')[0],
-      photoUrl: payload.picture ?? undefined,
-      googleId: payload.sub ?? undefined
-    };
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      401,
-      ErrorCodes.INVALID_GOOGLE_TOKEN,
-      'Google credential could not be verified'
-    );
-  }
-}
-
-/** Email a Chairman or Pastor gave for the very first admins (ADMIN_EMAILS). */
-function getBootstrapAdminEmails(): string[] {
-  return (env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map(email => email.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 function issueSessionTokens(member: MemberDocument) {
   const payload = {userId: member.id, type: 'member' as const};
 
@@ -144,42 +40,86 @@ function issueSessionTokens(member: MemberDocument) {
   };
 }
 
+/** Emails a Chairman or Pastor gave in ADMIN_EMAILS, so the first admin can get in. */
+function getBootstrapAdminEmails(): string[] {
+  return (env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map(email => email.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+const NOT_ON_TEAM_LIST_MESSAGE =
+  'This email is not on the team list. Please ask the Chairman or Pastor to add you.';
+
 export const memberService = {
-  async signInWithGoogle(input: {credential?: string; code?: string}) {
-    const client = getGoogleClient();
+  /**
+   * First-time setup. Only works for an email an admin already added
+   * (or one of the ADMIN_EMAILS, which becomes the first admin).
+   */
+  async register(input: {name: string; email: string; password: string}) {
+    const email = input.email.trim().toLowerCase();
+    const existing = await memberRepository.findByEmail(email);
 
-    const idToken =
-      input.credential ??
-      (await exchangeCodeForIdToken(client, input.code as string));
-    const profile = await verifyIdToken(client, idToken);
-
-    const existing = await memberRepository.findByEmail(profile.email);
-
-    if (!existing) {
-      const isBootstrapAdmin = getBootstrapAdminEmails().includes(
-        profile.email
+    if (existing?.passwordHash) {
+      throw new ApiError(
+        409,
+        ErrorCodes.ACCOUNT_EXISTS,
+        'This email already has an account. Please sign in instead.'
       );
+    }
 
-      if (!isBootstrapAdmin) {
-        throw new ApiError(
-          403,
-          ErrorCodes.NOT_ON_TEAM_LIST,
-          'This Google account is not on the team list'
-        );
-      }
+    const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
 
-      const member = await memberRepository.create({
-        ...profile,
-        permission: 'admin',
-        pushTokens: []
-      });
+    if (existing) {
+      const member =
+        (await memberRepository.activate(existing.id, {
+          name: input.name,
+          passwordHash
+        })) ?? existing;
 
       return {member, ...issueSessionTokens(member)};
     }
 
-    const member =
-      (await memberRepository.syncGoogleProfile(existing.id, profile)) ??
-      existing;
+    if (!getBootstrapAdminEmails().includes(email)) {
+      throw new ApiError(403, ErrorCodes.NOT_ON_TEAM_LIST, NOT_ON_TEAM_LIST_MESSAGE);
+    }
+
+    const member = await memberRepository.create({
+      name: input.name,
+      email,
+      passwordHash,
+      activatedAt: new Date(),
+      permission: 'admin',
+      pushTokens: []
+    });
+
+    return {member, ...issueSessionTokens(member)};
+  },
+
+  async login(input: {email: string; password: string}) {
+    const email = input.email.trim().toLowerCase();
+    const member = await memberRepository.findByEmail(email);
+
+    if (!member) {
+      throw new ApiError(403, ErrorCodes.NOT_ON_TEAM_LIST, NOT_ON_TEAM_LIST_MESSAGE);
+    }
+
+    if (!member.passwordHash) {
+      throw new ApiError(
+        403,
+        ErrorCodes.ACCOUNT_NOT_ACTIVATED,
+        'This account has no password yet. Please use "First time here?" to set one.'
+      );
+    }
+
+    const matches = await bcrypt.compare(input.password, member.passwordHash);
+    if (!matches) {
+      throw new ApiError(
+        401,
+        ErrorCodes.INVALID_CREDENTIALS,
+        'Invalid email or password'
+      );
+    }
 
     return {member, ...issueSessionTokens(member)};
   },

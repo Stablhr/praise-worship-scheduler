@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element -- member photos come from Google and the
-   app is also packaged with Capacitor, where the Next.js image optimiser is not
+/* eslint-disable @next/next/no-img-element -- member photos are remote and the app
+   is also packaged with Capacitor, where the Next.js image optimiser is not
    available. A plain img keeps local web and the mobile build identical. */
 
 import {cn} from '@/lib/utils';

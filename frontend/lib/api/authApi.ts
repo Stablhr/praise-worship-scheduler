@@ -24,7 +24,7 @@ type LogoutResponse = {message: string};
 
 export type MemberPermission = 'admin' | 'songleader' | 'member';
 
-/** The signed-in member. `type` is 'member' for people who signed in with Google. */
+/** The signed-in member. `type` is 'member' for the team members of this app. */
 export type MeUser = {
   id: string;
   type: 'user' | 'admin' | 'member';
@@ -35,7 +35,7 @@ export type MeUser = {
   position?: string;
 };
 
-type MeResponse = {
+export type MeResponse = {
   user: MeUser;
 };
 
@@ -71,14 +71,23 @@ export async function logout() {
 }
 
 /**
- * Signs in with Google. Send either the authorization code from the Google
- * popup or an ID token (used by the Capacitor plugin from Phase 8 onwards).
+ * Team member sign-in. Email and password, only for emails an admin added.
  */
-export async function signInWithGoogle(params: {
-  credential?: string;
-  code?: string;
+export async function memberLogin(params: {email: string; password: string}) {
+  const res = await httpClient.post<MeResponse>('/auth/member/login', params);
+  return res.data;
+}
+
+/** First-time setup: the member sets their own name and password. */
+export async function memberRegister(params: {
+  name: string;
+  email: string;
+  password: string;
 }) {
-  const res = await httpClient.post<MeResponse>('/auth/google', params);
+  const res = await httpClient.post<MeResponse>(
+    '/auth/member/register',
+    params
+  );
   return res.data;
 }
 

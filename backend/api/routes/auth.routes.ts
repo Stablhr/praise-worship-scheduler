@@ -11,7 +11,8 @@ import {
   resetPasswordDto,
   resendResetCodeDto,
   changePasswordDto,
-  googleAuthDto
+  memberRegisterDto,
+  memberLoginDto
 } from '../dtos/auth.dto';
 import {
   authLimiter,
@@ -39,12 +40,18 @@ router.post(
 );
 router.post('/login', authLimiter, validate(loginDto), authController.login);
 
-// Google sign-in — the only way members sign in
+// Team members (UCJM app) — email and password, only for emails an admin added
 router.post(
-  '/google',
-  authActionLimiter,
-  validate(googleAuthDto),
-  authController.google
+  '/member/register',
+  authLimiter,
+  validate(memberRegisterDto),
+  authController.memberRegister
+);
+router.post(
+  '/member/login',
+  authLimiter,
+  validate(memberLoginDto),
+  authController.memberLogin
 );
 
 // password reset — strict limit

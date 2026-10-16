@@ -56,7 +56,7 @@ export function getFriendlyErrorMessage(
       case 'ALREADY_VERIFIED':
         return 'Your email is already verified. Please sign in.';
       case 'INVALID_CREDENTIALS':
-        return 'Invalid email/phone number or password.';
+        return 'Invalid email or password. Please try again.';
       case 'NOT_VERIFIED':
         return 'Your email is not verified yet. Please verify your email to continue.';
       case 'INVALID_CODE':
@@ -66,19 +66,15 @@ export function getFriendlyErrorMessage(
       case 'USER_NOT_FOUND':
         return 'User not found.';
       case 'ACCOUNT_EXISTS':
-        return 'An account already exists with this information.';
+        return 'This email already has an account. Please sign in instead.';
       case 'RATE_LIMIT_EXCEEDED':
         return 'Too many requests. Please wait a moment and try again.';
       case 'NETWORK_ERROR':
         return 'Network error. Please check your connection and try again.';
       case 'NOT_ON_TEAM_LIST':
-        return 'This Google account is not on the team list. Please ask the Chairman or Pastor to add you.';
-      case 'INVALID_GOOGLE_TOKEN':
-        return 'Google could not confirm your sign-in. Please try again.';
-      case 'GOOGLE_NOT_CONFIGURED':
-        return 'Google sign-in is not set up yet. Please ask the Chairman or Pastor.';
-      case 'GOOGLE_SCRIPT_UNAVAILABLE':
-        return 'Google sign-in could not start. Please check your connection and try again.';
+        return 'This email is not on the team list. Please ask the Chairman or Pastor to add you.';
+      case 'ACCOUNT_NOT_ACTIVATED':
+        return 'You have not set up your account yet. Tap “First time here?” to choose a password.';
       case 'MEMBER_NOT_FOUND':
         return 'We could not find your member record. Please ask the Chairman or Pastor to add you again.';
       case 'FORBIDDEN':

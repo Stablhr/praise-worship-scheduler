@@ -310,7 +310,8 @@ export const authService = {
         throw new ApiError(401, ErrorCodes.UNAUTHORIZED, 'Invalid token');
       }
 
-      // Members sign in with Google, so there is no email verification to wait for.
+      // Team members activate their own account on first sign-in, so there is no
+      // email verification step to wait for.
       if (!isMember && !(account as {isVerified?: boolean}).isVerified) {
         throw new ApiError(403, ErrorCodes.NOT_VERIFIED, 'Email not verified');
       }
