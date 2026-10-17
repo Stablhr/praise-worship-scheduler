@@ -122,9 +122,13 @@ export const httpClient = (() => {
       const status = axiosError.response?.status;
 
       const url = originalConfig?.url ?? '';
+      // A 401 from these means "wrong credentials", not "expired access
+      // token", so it must reach the caller instead of triggering a refresh.
       const isRefreshOrLoginEndpoint =
         url === '/auth/refresh' ||
         url === '/auth/login' ||
+        url === '/auth/member/login' ||
+        url === '/auth/member/register' ||
         url === '/auth/logout' ||
         url === '/auth/register' ||
         url === '/auth/verify' ||
