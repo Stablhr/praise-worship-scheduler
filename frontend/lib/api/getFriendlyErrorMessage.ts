@@ -83,6 +83,12 @@ export function getFriendlyErrorMessage(
         return 'You cannot remove your own account.';
       case 'LAST_ADMIN':
         return 'There must always be at least one admin on the team.';
+      case 'SERVICE_NOT_FOUND':
+        return 'We could not find this service. It may have been removed.';
+      case 'INVALID_ROLE':
+        return 'That role is not part of this service.';
+      case 'DUPLICATE_ROLE':
+        return 'Only one member can hold a role for now.';
       case 'FORBIDDEN':
         return 'You do not have permission to do that.';
       default:
