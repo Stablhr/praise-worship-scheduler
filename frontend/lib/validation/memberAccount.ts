@@ -44,3 +44,7 @@ export function validatePasswordConfirmation(
   if (!confirmation) return 'Please repeat your password.';
   return password === confirmation ? null : 'The passwords do not match.';
 }
+
+export function validatePosition(position: string): string | null {
+  return position.trim().length > 0 ? null : 'Please choose the position you serve in.';
+}

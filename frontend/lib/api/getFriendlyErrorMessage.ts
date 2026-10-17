@@ -71,12 +71,12 @@ export function getFriendlyErrorMessage(
         return 'Too many requests. Please wait a moment and try again.';
       case 'NETWORK_ERROR':
         return 'Network error. Please check your connection and try again.';
-      case 'NOT_ON_TEAM_LIST':
-        return 'This email is not on the team list. Please ask the Chairman or Pastor to add you.';
+      case 'ACCOUNT_NOT_FOUND':
+        return 'We could not find an account with that email. Tap “Create an account” to make one.';
       case 'ACCOUNT_NOT_ACTIVATED':
-        return 'You have not set up your account yet. Tap “First time here?” to choose a password.';
+        return 'You have not set up your account yet. Tap “Create an account” to choose a password.';
       case 'MEMBER_NOT_FOUND':
-        return 'We could not find your member record. Please ask the Chairman or Pastor to add you again.';
+        return 'We could not find your account. Please create an account again.';
       case 'MEMBER_EXISTS':
         return 'This email is already on the team list.';
       case 'CANNOT_REMOVE_SELF':

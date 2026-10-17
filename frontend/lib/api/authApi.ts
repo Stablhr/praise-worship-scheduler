@@ -32,11 +32,15 @@ export async function memberLogin(params: {email: string; password: string}) {
   return res.data;
 }
 
-/** First-time setup: the member sets their own name and password. */
+/**
+ * Creates the account behind an email: a person signing themselves up, or a
+ * member an admin added in advance. They choose their name and password.
+ */
 export async function memberRegister(params: {
   name: string;
   email: string;
   password: string;
+  position: string;
 }) {
   const res = await httpClient.post<MeResponse>(
     '/auth/member/register',

@@ -5,14 +5,19 @@ import {memberLogin, memberRegister, type MeResponse} from '@/lib/api/authApi';
 import {meQueryKey} from './useMeQuery';
 
 export type SignInInput = {email: string; password: string};
-export type SetUpAccountInput = {name: string; email: string; password: string};
+export type SignUpInput = {
+  name: string;
+  email: string;
+  password: string;
+  position: string;
+};
 
 /**
- * Team member sign-in with email and password.
+ * Team member sign-in and sign-up with email and password.
  *
- * `signIn` is the everyday path. `setUpAccount` is the one-time path for a
- * member an admin just added, where they pick their own name and password.
- * Both save the member into the React Query cache and send them home.
+ * Anyone in the ministry can `signUp`, and an admin can also add someone in
+ * advance so they can sign up and claim the email. Both save the member into
+ * the React Query cache and send them home.
  */
 export function useMemberAuth() {
   const router = useRouter();
@@ -40,6 +45,6 @@ export function useMemberAuth() {
     isSubmitting,
     resetError: () => setError(null),
     signIn: (input: SignInInput) => run(() => memberLogin(input)),
-    setUpAccount: (input: SetUpAccountInput) => run(() => memberRegister(input))
+    signUp: (input: SignUpInput) => run(() => memberRegister(input))
   };
 }

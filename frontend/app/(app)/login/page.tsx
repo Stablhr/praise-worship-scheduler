@@ -6,21 +6,24 @@ import {Eye, EyeOff} from 'lucide-react';
 import {BrandLogo} from '@/components/app/BrandLogo';
 import {FormField} from '@/components/app/FormField';
 import {PillButton} from '@/components/app/PillButton';
+import {SelectField} from '@/components/app/SelectField';
 import {WaveFooter} from '@/components/app/WaveFooter';
 import {getFriendlyErrorMessage} from '@/lib/api/getFriendlyErrorMessage';
 import {useMeQuery} from '@/lib/hooks/auth/useMeQuery';
 import {useMemberAuth} from '@/lib/hooks/auth/useMemberAuth';
+import {MEMBER_POSITIONS} from '@/lib/members/positions';
 import {
   validateEmail,
   validateName,
   validatePassword,
-  validatePasswordConfirmation
+  validatePasswordConfirmation,
+  validatePosition
 } from '@/lib/validation/memberAccount';
 
-/** `sign-in` is the everyday path; `setup` is the first sign-in for an added member. */
-type Mode = 'sign-in' | 'setup';
+/** `sign-in` is the everyday path; `sign-up` creates an account. */
+type Mode = 'sign-in' | 'sign-up';
 
-type FieldName = 'name' | 'email' | 'password' | 'confirmation';
+type FieldName = 'name' | 'email' | 'password' | 'confirmation' | 'position';
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const COPY: Record<
@@ -40,34 +43,34 @@ const COPY: Record<
     description: 'Sign in to see who is serving and what songs are planned.',
     submit: 'Sign in',
     loading: 'Signing in…',
-    switchPrompt: 'First time here?',
-    switchAction: 'Set up your account',
-    footnote: 'Only members added by the Chairman or Pastor can sign in.'
+    switchPrompt: 'New here?',
+    switchAction: 'Create an account',
+    footnote: 'Anyone in the ministry can create an account.'
   },
-  setup: {
-    heading: 'Welcome!',
+  'sign-up': {
+    heading: 'Create your account',
     description:
-      'The Chairman or Pastor added you. Choose a password to finish setting up.',
-    submit: 'Set up my account',
-    loading: 'Setting up…',
-    switchPrompt: 'Already have a password?',
+      'Choose the position you serve in. The Chairman or Pastor can change it later.',
+    submit: 'Create my account',
+    loading: 'Creating…',
+    switchPrompt: 'Already have an account?',
     switchAction: 'Sign in',
-    footnote: 'Use the email the Chairman or Pastor added for you.'
+    footnote: 'Use the email you will keep for the ministry.'
   }
 };
 
-/** Login screen (DESIGN.md section 6.2, email and password). */
+/** Login and sign-up screen (DESIGN.md section 6.2, email and password). */
 export default function LoginPage() {
   const router = useRouter();
   const {isSuccess} = useMeQuery();
-  const {signIn, setUpAccount, isSubmitting, error, resetError} =
-    useMemberAuth();
+  const {signIn, signUp, isSubmitting, error, resetError} = useMemberAuth();
 
   const [mode, setMode] = useState<Mode>('sign-in');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [position, setPosition] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
@@ -82,12 +85,12 @@ export default function LoginPage() {
         error,
         mode === 'sign-in'
           ? 'We could not sign you in. Please check your email and password and try again.'
-          : 'We could not set up your account. Please try again.'
+          : 'We could not create your account. Please try again.'
       )
     : null;
 
   function switchMode() {
-    setMode(current => (current === 'sign-in' ? 'setup' : 'sign-in'));
+    setMode(current => (current === 'sign-in' ? 'sign-up' : 'sign-in'));
     setFieldErrors({});
     setConfirmation('');
     resetError();
@@ -103,14 +106,16 @@ export default function LoginPage() {
     if (emailError) nextErrors.email = emailError;
     if (passwordError) nextErrors.password = passwordError;
 
-    if (mode === 'setup') {
+    if (mode === 'sign-up') {
       const nameError = validateName(name);
+      const positionError = validatePosition(position);
       const confirmationError = validatePasswordConfirmation(
         password,
         confirmation
       );
 
       if (nameError) nextErrors.name = nameError;
+      if (positionError) nextErrors.position = positionError;
       if (confirmationError) nextErrors.confirmation = confirmationError;
     }
 
@@ -122,7 +127,12 @@ export default function LoginPage() {
       return;
     }
 
-    await setUpAccount({name: name.trim(), email: email.trim(), password});
+    await signUp({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      position
+    });
   }
 
   const togglePassword = (
@@ -171,7 +181,7 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-4">
-          {mode === 'setup' && (
+          {mode === 'sign-up' && (
             <FormField
               id="name"
               label="Your name"
@@ -206,22 +216,39 @@ export default function LoginPage() {
             error={fieldErrors.password}
             labelAction={togglePassword}
             hint={
-              mode === 'setup'
+              mode === 'sign-up'
                 ? 'At least 8 characters, with a capital letter, a small letter, a number and a symbol.'
                 : undefined
             }
           />
 
-          {mode === 'setup' && (
-            <FormField
-              id="confirmation"
-              label="Repeat password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              value={confirmation}
-              onChange={event => setConfirmation(event.target.value)}
-              error={fieldErrors.confirmation}
-            />
+          {mode === 'sign-up' && (
+            <>
+              <FormField
+                id="confirmation"
+                label="Repeat password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                value={confirmation}
+                onChange={event => setConfirmation(event.target.value)}
+                error={fieldErrors.confirmation}
+              />
+
+              <SelectField
+                id="position"
+                label="Your position"
+                value={position}
+                onChange={event => setPosition(event.target.value)}
+                error={fieldErrors.position}
+              >
+                <option value="">Choose your position…</option>
+                {MEMBER_POSITIONS.map(option => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </SelectField>
+            </>
           )}
 
           <PillButton
