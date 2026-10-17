@@ -58,12 +58,14 @@ Adapt to the existing folders. This is the target shape:
 - `type`: `saturday` | `sunday`
 - `date` (UTC), `time` label, `notes` (optional)
 - `photoUrl` (the pasted photo of assigned volunteers)
+  - Phase 3 stores `date` as the exact start instant in UTC and `time` as the Manila start (HH:mm). The app sends a Manila day and time; the server does the conversion.
 
 **Assignment**
 - `serviceId`, `role`, `memberId`
 - Roles for Sunday: Song leader, Guitarist, Bassist, Drummer, Preacher
 - Roles for Saturday: Exhortation, Songlead, Guitarist, Moderator/Host
 - One member can hold more than one role in a service. A role can hold more than one member only if it is a repeatable role (Guitarist); keep it to one by default.
+  - Phase 3 ships one member per role. Allowing more than one member in the repeatable Guitarist role is deferred until the team asks for it, so nothing the app cannot show can be stored by accident.
 
 **Lineup**
 - `serviceId`
@@ -91,10 +93,13 @@ All routes require a signed-in member unless noted. Return JSON. Validate input.
 | `GET /api/me` | member | Current member |
 | `PATCH /api/me` | member | Update own profile and preferences |
 | `GET /api/dashboard` | member | Next Sunday and next Saturday with assignments, latest updates |
-| `GET /api/services?from=&to=` | member | Services for the calendar |
+| `GET /api/services?from=&to=` | member | Services for the calendar. `from` and `to` are Manila days (YYYY-MM-DD) |
 | `POST /api/services` | admin | Create a service |
-| `GET /api/services/:id` | member | Service with assignments, lineup, photo |
-| `PUT /api/services/:id/assignments` | admin | Set assignments |
+| `POST /api/services/generate` | admin | Create the upcoming Saturdays and Sundays (the "generate next 8 weeks" action) |
+| `GET /api/services/:id` | member | Service with its roles and the members who hold them (the lineup and photo join it in Phases 4 and 5) |
+| `PUT /api/services/:id/assignments` | admin | Set assignments. Replaces the whole set for that service |
+| `PATCH /api/services/:id` | admin | Edit a service's day, time, type or notes (added in Phase 3 at the owner's request) |
+| `DELETE /api/services/:id` | admin | Remove a service and its assignments (added in Phase 3 at the owner's request) |
 | `POST /api/services/:id/photo` | member | Upload the pasted photo |
 | `DELETE /api/services/:id/photo` | admin | Remove the photo |
 | `GET /api/services/:id/lineup` | member | Songs |
@@ -138,11 +143,12 @@ The default login page and backend auth already exist. Build the **frontend** fo
 **Done when:** an admin can add and remove members; a normal member cannot, even by calling the API directly.
 
 ### Phase 3: Schedule and assignments
-- [ ] Service and Assignment models
-- [ ] Monthly calendar with dots on service days
-- [ ] Service details screen listing every role and who holds it
-- [ ] Admin: create services, assign and change volunteers
-- [ ] Admin: create the upcoming Saturdays and Sundays quickly (a "generate next 8 weeks" action)
+- [x] Service and Assignment models
+- [x] Monthly calendar with dots on service days
+- [x] Service details screen listing every role and who holds it
+- [x] Admin: create services, assign and change volunteers
+- [x] Admin: create the upcoming Saturdays and Sundays quickly (a "generate next 8 weeks" action)
+- [x] Admin: edit a service's day, time or notes, and remove a service (added in Phase 3 at the owner's request; see section 3)
 
 **Done when:** an admin can assign every role for next Saturday and Sunday, and members can see it.
 

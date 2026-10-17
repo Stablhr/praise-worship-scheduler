@@ -148,10 +148,14 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 - Top bar title "Schedule" with a calendar icon.
 - Month header with previous and next arrows.
 - Calendar grid. Today is a yellow circle. Days with a service have a small blue dot.
-- Below the calendar: a card per upcoming service (name, date, time, chevron).
-- **Service Details**: two columns of roles (Sunday and Saturday) with icons.
-- Service detail screen: roles with assigned members, the lineup summary, the team photo and the paste/upload area.
-- Admins see "Edit assignments".
+- Below the calendar: a card per service in the month (name, date, time, chevron).
+  Tapping a day narrows the list to that day; "Show all" brings the month back.
+- Service detail screen: every role in the order the service runs, each with the
+  member serving it or "No one assigned yet", plus the date, the time and the notes.
+  The lineup summary, the team photo and the paste/upload area arrive in Phases 4 and 5.
+- Admins see "Edit assignments" there: one dropdown per role, then Save. They also get
+  "Edit service" and "Remove service" from the top-right menu, and a yellow "+" on the
+  Schedule screen offering "Add a service" or "Generate the next 8 weeks".
 
 ### 6.5 Lineups
 - Top bar title "Lineups". Song leaders and admins see a yellow "+" button.
