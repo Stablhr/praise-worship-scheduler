@@ -28,11 +28,23 @@ export const memberRepository = {
   /** Used to stop the last admin from being removed or demoted. */
   countAdmins: () => MemberModel.countDocuments({permission: 'admin'}).exec(),
 
-  /** First sign-in setup: the member sets their own name and password. */
-  activate: (id: string, data: {name: string; passwordHash: string}) =>
+  /**
+   * First sign-in setup: the member sets their own name and password. The
+   * position is only written when one was given, so a position an admin set
+   * on the Members screen is never overwritten by the sign-up form.
+   */
+  activate: (
+    id: string,
+    data: {name: string; passwordHash: string; position?: string}
+  ) =>
     MemberModel.findByIdAndUpdate(
       id,
-      {...data, activatedAt: new Date()},
+      {
+        name: data.name,
+        passwordHash: data.passwordHash,
+        ...(data.position ? {position: data.position} : {}),
+        activatedAt: new Date()
+      },
       {new: true}
     ).exec()
 };

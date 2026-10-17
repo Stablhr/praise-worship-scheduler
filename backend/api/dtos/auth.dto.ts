@@ -58,12 +58,14 @@ export const changePasswordDto = z.object({
 
 export const memberRegisterDto = z.object({
   name: z.string().min(1, 'Please enter your name'),
-  email: z.string().email('Please enter a valid email address'),
-  password: passwordSchema
+  email: z.string().trim().email('Please enter a valid email address'),
+  password: passwordSchema,
+  /** The position the person serves in. Free text, like the Members screen. */
+  position: z.string().trim().max(60).optional()
 });
 
 export const memberLoginDto = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().email('Please enter a valid email address'),
   password: z.string().min(1, 'Please enter your password')
 });
 

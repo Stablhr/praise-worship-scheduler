@@ -50,16 +50,36 @@ function getBootstrapAdminEmails(): string[] {
     .filter(Boolean);
 }
 
-const NOT_ON_TEAM_LIST_MESSAGE =
-  'This email is not on the team list. Please ask the Chairman or Pastor to add you.';
+/** A self-registered song leader gets the song leader permission; the rest are members. */
+function getPermissionForSignUp(
+  email: string,
+  position?: string
+): MemberPermission {
+  if (getBootstrapAdminEmails().includes(email)) return 'admin';
+  if (cleanPosition(position) === 'Song leader') return 'songleader';
+  return 'member';
+}
+
+const ACCOUNT_NOT_FOUND_MESSAGE =
+  'We could not find an account with that email. Tap "Create an account" to make one.';
 
 export const memberService = {
   /**
-   * First-time setup. Only works for an email an admin already added
-   * (or one of the ADMIN_EMAILS, which becomes the first admin).
+   * Creates an account. Anyone in the ministry can sign themselves up, and an
+   * admin can also add someone in advance (they then set a password here too).
+   *
+   * The position is the one the person chose, but a position an admin already
+   * set is never overwritten. Admin is only ever granted by `ADMIN_EMAILS` or
+   * by an existing admin on the Members screen.
    */
-  async register(input: {name: string; email: string; password: string}) {
+  async register(input: {
+    name: string;
+    email: string;
+    password: string;
+    position?: string;
+  }) {
     const email = input.email.trim().toLowerCase();
+    const position = cleanPosition(input.position);
     const existing = await memberRepository.findByEmail(email);
 
     if (existing?.passwordHash) {
@@ -76,22 +96,20 @@ export const memberService = {
       const member =
         (await memberRepository.activate(existing.id, {
           name: input.name,
-          passwordHash
+          passwordHash,
+          position: existing.position ? undefined : position
         })) ?? existing;
 
       return {member, ...issueSessionTokens(member)};
     }
 
-    if (!getBootstrapAdminEmails().includes(email)) {
-      throw new ApiError(403, ErrorCodes.NOT_ON_TEAM_LIST, NOT_ON_TEAM_LIST_MESSAGE);
-    }
-
     const member = await memberRepository.create({
-      name: input.name,
+      name: input.name.trim(),
       email,
       passwordHash,
       activatedAt: new Date(),
-      permission: 'admin',
+      position,
+      permission: getPermissionForSignUp(email, position),
       pushTokens: []
     });
 
@@ -103,14 +121,18 @@ export const memberService = {
     const member = await memberRepository.findByEmail(email);
 
     if (!member) {
-      throw new ApiError(403, ErrorCodes.NOT_ON_TEAM_LIST, NOT_ON_TEAM_LIST_MESSAGE);
+      throw new ApiError(
+        404,
+        ErrorCodes.ACCOUNT_NOT_FOUND,
+        ACCOUNT_NOT_FOUND_MESSAGE
+      );
     }
 
     if (!member.passwordHash) {
       throw new ApiError(
         403,
         ErrorCodes.ACCOUNT_NOT_ACTIVATED,
-        'This account has no password yet. Please use "First time here?" to set one.'
+        'This account has no password yet. Please use "Create an account" to set one.'
       );
     }
 

@@ -5,7 +5,7 @@ export type MemberPermission = 'admin' | 'songleader' | 'member';
 export interface MemberDocument extends mongoose.Document {
   /** Full name of the member. */
   name: string;
-  /** Sign-in email. Only emails an admin added can sign in. */
+  /** Sign-in email. Anyone in the ministry can create an account with it. */
   email: string;
   /**
    * bcrypt hash of the member's password.
