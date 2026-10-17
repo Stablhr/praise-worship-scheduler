@@ -121,20 +121,22 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 - Blue and yellow wave at the bottom.
 - Show for about 1.2 seconds, then go to Login or Home.
 
-### 6.2 Login
+### 6.2 Login and sign-up
 - White card area with the same wave at the bottom.
 - Logo, "UCJM" title, subtitle "Praise & Worship Ministry".
 - Heading "Welcome back!" and one line: "Sign in to see who is serving and what songs are planned."
 - Two fields, 48 high and rounded with 16 side padding: **Email** and **Password**. The password field has a small Show/Hide toggle.
 - One large pill button: **Sign in** (blue button, white text).
-- Under the button: "First time here? **Set up your account**". This switches the same screen into setup mode for a member an admin just added: fields **Your name**, **Email**, **Password**, **Repeat password**, and the button reads **Set up my account**.
-- Small text under the form: "Only members added by the Chairman or Pastor can sign in."
+- Under the button: "New here? **Create an account**". This switches the same screen into sign-up mode, which anyone in the ministry can use: fields **Your name**, **Email**, **Password**, **Repeat password** and a **Your position** picker (Chairman, Pastor, Song leader, Exhortation, Guitarist, Bassist, Drummer, Moderator/Host, Preacher). The button reads **Create my account**, and the heading becomes "Create your account".
+- Small text under the form: "Anyone in the ministry can create an account." (sign-in) and "Use the email you will keep for the ministry." (sign-up).
 - Error banner (red tint) above the fields:
-  - Email not on the member list: "This email is not on the team list. Please ask the Chairman or Pastor to add you."
+  - No account for that email: "We could not find an account with that email. Tap 'Create an account' to make one."
   - Wrong password: "Invalid email or password. Please try again."
-  - Added but no password yet: "You have not set up your account yet. Tap 'First time here?' to choose a password."
+  - Email that already has an account: "This email already has an account. Please sign in instead."
+  - Added in advance but no password yet: "You have not set up your account yet. Tap 'Create an account' to choose a password."
 - Field level hints instead of the banner for a password that breaks the rules (8 or more characters, a capital, a small letter, a number and a symbol).
 - Loading state: the button shows a spinner and is disabled.
+- Permissions are never chosen on this screen. Choosing the **Song leader** position grants the song leader permission; everyone else is a plain member. **Admin** comes only from `ADMIN_EMAILS` or from an existing admin on the Members screen.
 
 ### 6.3 Home (Dashboard)
 - Blue top bar with logo, bell and profile photo.

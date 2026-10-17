@@ -86,7 +86,7 @@ All routes require a signed-in member unless noted. Return JSON. Validate input.
 
 | Method and path | Who | Purpose |
 | --- | --- | --- |
-| `POST /api/auth/member/register` | public | First sign-in of an added member: set their name and password, return session |
+| `POST /api/auth/member/register` | public | Create an account: name, email, password and the position they serve in. Also used by a member an admin added in advance. Return session |
 | `POST /api/auth/member/login` | public | Sign in with email and password |
 | `POST /api/auth/logout` | member | End the session |
 | `POST /api/auth/refresh` | public | Refresh the session cookies |
@@ -107,7 +107,7 @@ All routes require a signed-in member unless noted. Return JSON. Validate input.
 | `PATCH /api/services/:id/lineup/songs/:songId` | songleader, admin | Edit or reorder |
 | `DELETE /api/services/:id/lineup/songs/:songId` | songleader, admin | Remove |
 | `GET /api/members` | member | List members |
-| `POST /api/members` | admin | Add a member by email (they set their own password on first sign-in) |
+| `POST /api/members` | admin | Add a member by email so they can create their account with it |
 | `PATCH /api/members/:id` | admin | Edit a member's name, position or permission |
 | `DELETE /api/members/:id` | admin | Remove a member |
 | `GET /api/notifications` | member | Own notifications |
@@ -124,7 +124,8 @@ Permission checks live in one middleware. Never trust the client for permissions
 ### Phase 1: Login page frontend and app shell
 The default login page and backend auth already exist. Build the **frontend** for them.
 - [x] Splash screen and login screen exactly as in `DESIGN.md`
-- [x] Email and password form wired to `POST /api/auth/member/login`, plus the "First time here?" setup path for an added member
+- [x] Email and password form wired to `POST /api/auth/member/login`, plus the "Create an account" sign-up path where anyone in the ministry picks the position they serve in
+- [x] Sign-up is open to anyone in the ministry (changed at the owner's request, Oct 2026). The old rule — only an email an admin had added could sign in — is gone. `ADMIN_EMAILS` and the Members screen are still the only ways to become an admin
 - [x] Error states: email not on the member list, wrong password, network failure
 - [x] Protected route wrapper: signed-out users go to login
 - [x] App shell: top bar, bottom tab bar (5 tabs), safe-area spacing
@@ -218,5 +219,6 @@ The default login page and backend auth already exist. Build the **frontend** fo
 - Do not add a song limit.
 - Do not add a multimedia role.
 - Do not bring back the template's own screens or its landing page. Every screen lives under `app/(app)/`; `/` opens the splash.
+- Do not let anyone make themselves an admin. Sign-up chooses a position only; admin comes from `ADMIN_EMAILS` or from an existing admin.
 - Do not build store-publishing steps or a PWA manifest as the main install path.
 - Do not skip a phase's "Done when" check.
