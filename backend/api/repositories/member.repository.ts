@@ -15,6 +15,9 @@ export const memberRepository = {
   /** The whole team, for the Members screen. */
   list: () => MemberModel.find().sort({name: 1}).collation({locale: 'en'}).exec(),
 
+  /** Looks up the people assigned to a service in one query. */
+  listByIds: (ids: string[]) => MemberModel.find({_id: {$in: ids}}).exec(),
+
   create: (data: Partial<MemberDocument>) => MemberModel.create(data),
 
   updateById: (id: string, update: UpdateQuery<MemberDocument>) =>

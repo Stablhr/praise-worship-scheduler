@@ -5,6 +5,7 @@ import {env} from '../config/env';
 import {ApiError} from '../utils/error';
 import {ErrorCodes} from '../constants/errorCodes';
 import {MemberDocument, MemberPermission} from '../models/Member.model';
+import {assignmentRepository} from '../repositories/assignment.repository';
 import {memberRepository} from '../repositories/member.repository';
 
 const SALT_ROUNDS = 10;
@@ -240,6 +241,8 @@ export const memberService = {
       await assertNotLastAdmin('There must always be at least one admin');
     }
 
+    // Someone who left the team should not stay on the schedule.
+    await assignmentRepository.deleteByMember(memberId);
     await memberRepository.deleteById(memberId);
   }
 };
