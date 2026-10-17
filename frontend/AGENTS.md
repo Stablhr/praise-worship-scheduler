@@ -17,15 +17,24 @@ npm run lint         # ESLint
 ## Architecture
 
 ```
-app/(auth)/         # Public auth pages (sign-in, sign-up, forgot/reset password, verify email)
-app/(user)/         # User dashboard — /dashboard (parallel routes: @profile, @settings)
-app/(admin)/        # Admin dashboard — /admin/dashboard (parallel routes: @profile, @settings)
-app/(public)/       # Public landing page
-lib/api/            # Axios HTTP client, auth API calls, error handling
-lib/hooks/          # React Query hooks (useMeQuery, useLogout)
-lib/auth/           # Redirect utilities
+app/page.tsx        # Sends / to the splash screen
+app/(app)/          # The UCJM app
+  splash/           # Splash, then Home or Login (DESIGN.md 6.1)
+  login/            # Email + password sign-in and "First time here?" setup (6.2)
+  (shell)/          # Protected shell: RequireAuth + bottom nav
+    home/ schedule/ lineups/ members/ more/
+components/app/     # App UI (cards, sheets, nav, form fields, states)
+components/auth/    # RequireAuth
+components/ui/      # shadcn/ui primitives
+lib/api/            # Axios HTTP client, auth/members/services APIs, error mapping
+lib/hooks/          # React Query hooks (auth, members, schedule)
+lib/date/ lib/schedule/ lib/members/ lib/validation/
 lib/provider/       # ReactQueryProvider
 ```
+
+The auth boilerplate this project started from (`(public)`, `(auth)`, `(user)`,
+`(admin)` — landing page, sign-in/sign-up, user and admin dashboards) has been
+removed. Do not bring it back; every screen belongs under `app/(app)/`.
 
 ## Code Style
 
@@ -33,7 +42,7 @@ lib/provider/       # ReactQueryProvider
 - Frontend errors go through `getFriendlyErrorMessage()` — never show raw backend messages to users
 - React Query hooks in `frontend/lib/hooks/` for all server state
 - Use shadcn/ui components from `frontend/components/ui/` — never build form inputs or modals from scratch
-- API calls live in `frontend/lib/api/authApi.ts` — keep them centralized
+- API calls live in `frontend/lib/api/` (`authApi.ts`, `membersApi.ts`, `servicesApi.ts`) — keep them centralized there
 
 ## Error Handling
 
@@ -52,19 +61,8 @@ The `getFriendlyErrorMessage()` function maps error codes to user-friendly messa
 
 ## Route Groups
 
-- `(auth)` — No auth required. Pages here are public.
-- `(user)` — Requires authenticated user. Redirects to sign-in if not logged in.
-- `(admin)` — Requires admin role. Redirects to user dashboard if not admin.
-- `(public)` — No auth required. Landing/marketing pages.
-
-## Dashboard Layouts
-
-Both user and admin dashboards use **parallel routes** (`@profile`, `@settings`) with a sidebar + mobile bottom nav. Tab state is managed via `?tab=` search params.
-
-To add a new tab:
-1. Create `@tabname/page.tsx` in the dashboard folder
-2. Add the tab to `TABS` array in the dashboard `layout.tsx`
-3. Add the slot to `slotByTab` and `DashboardLayoutProps`
+- `(app)` — No auth required for `splash` and `login`; the `(shell)` group wraps every signed-in screen in `RequireAuth`, which sends signed-out visitors to `/login`.
+- Screens are mobile first (390 px), with the Netflix-style bottom nav from DESIGN.md section 5.
 
 ## Security Rules
 

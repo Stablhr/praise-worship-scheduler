@@ -129,6 +129,7 @@ The default login page and backend auth already exist. Build the **frontend** fo
 - [x] Protected route wrapper: signed-out users go to login
 - [x] App shell: top bar, bottom tab bar (5 tabs), safe-area spacing
 - [x] Theme tokens and fonts installed (`DESIGN.md`)
+- [x] Removed the auth template's own screens (`app/(public)`, `app/(auth)`, `app/(user)`, `app/(admin)` — its landing page, sign-in, sign-up and dashboards). They were still reachable at `/` and `/sign-in`, and they signed in against the empty `users`/`admins` collections, so the Chairman's member account was always refused. `/` now opens the splash screen, and any other URL shows the app's own not-found screen.
 
 **Done when:** a member can sign in with their email and password on a 390 px screen, land on an empty Home, and move between all five tabs.
 
@@ -216,5 +217,6 @@ The default login page and backend auth already exist. Build the **frontend** fo
 - Do not rewrite the existing login backend or database connection.
 - Do not add a song limit.
 - Do not add a multimedia role.
+- Do not bring back the template's own screens or its landing page. Every screen lives under `app/(app)/`; `/` opens the splash.
 - Do not build store-publishing steps or a PWA manifest as the main install path.
 - Do not skip a phase's "Done when" check.
