@@ -19,7 +19,7 @@ import {ScreenHeader} from '@/components/app/ScreenHeader';
 import {Skeleton} from '@/components/ui/skeleton';
 import {getFriendlyErrorMessage} from '@/lib/api/getFriendlyErrorMessage';
 import {isAdmin} from '@/lib/auth/permissions';
-import {useMeQuery} from '@/lib/hooks/auth/useMeQuery';
+import {meQueryKey, useMeQuery} from '@/lib/hooks/auth/useMeQuery';
 import {useLogout} from '@/lib/hooks/auth/useLogout';
 import {useQueryClient} from '@tanstack/react-query';
 import {useRouter} from 'next/navigation';
@@ -76,14 +76,16 @@ export default function SettingsPage() {
     setIsSaving(true);
     setSaveError(null);
     try {
-      await updateMe({
+      const result = await updateMe({
         preferences: {
           theme,
           language: 'en',
           notificationsEnabled
         }
       });
-      void queryClient.invalidateQueries({queryKey: ['me']});
+      // Update the cache directly so the new theme persists immediately.
+      queryClient.setQueryData(meQueryKey, result);
+      void queryClient.invalidateQueries({queryKey: meQueryKey});
     } catch (err) {
       setSaveError(
         getFriendlyErrorMessage(err, 'We could not save your settings. Please try again.')
