@@ -6,7 +6,7 @@ type VerificationCodeEmailParams = {
 };
 
 export function verificationCodeEmailTemplate({
-  appName = 'your app name',
+  appName = 'UCJM Praise & Worship Ministry',
   code,
   expiresMinutes,
   recipientName
@@ -31,8 +31,9 @@ export function verificationCodeEmailTemplate({
   </head>
   <body style="margin:0;padding:0;background:#f5f7fb;font-family:Arial,Helvetica,sans-serif;">
     <div style="max-width:520px;margin:0 auto;padding:24px;">
-      <div style="background:#ffffff;border-radius:14px;padding:24px;border:1px solid #e7eaf2;">
-        <div style="font-size:18px;font-weight:700;color:#111827;">${appName}</div>
+      <div style="background:#ffffff;border-radius:14px;padding:24px;border:1px solid #e7eaf2;text-align:center;">
+        <img src="cid:logo" alt="${appName} logo" style="width:120px;height:120px;display:block;margin:0 auto 16px;" />
+        <div style="font-size:20px;font-weight:700;color:#0b3d91;margin-bottom:4px;">${appName}</div>
         <div style="margin-top:12px;font-size:14px;color:#374151;line-height:1.5;">
           ${safeRecipient ? `Hi ${safeRecipient},` : 'Hi,'}
         </div>
