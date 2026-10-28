@@ -1,8 +1,16 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useParams, useRouter} from 'next/navigation';
-import {CalendarDays, Clock, MoreVertical, Pencil, Trash2} from 'lucide-react';
+import {
+  CalendarDays,
+  Clock,
+  Image as ImageIcon,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Upload
+} from 'lucide-react';
 import {BottomSheet} from '@/components/app/BottomSheet';
 import {ConfirmDialog} from '@/components/app/ConfirmDialog';
 import {ErrorState} from '@/components/app/ErrorState';
@@ -14,7 +22,12 @@ import {ServiceFormSheet} from '@/components/app/ServiceFormSheet';
 import {Skeleton} from '@/components/ui/skeleton';
 import {getFriendlyErrorMessage} from '@/lib/api/getFriendlyErrorMessage';
 import type {AssignmentInput} from '@/lib/api/servicesApi';
+import {
+  deleteServicePhoto,
+  uploadServicePhoto
+} from '@/lib/api/servicesApi';
 import {isAdmin} from '@/lib/auth/permissions';
+import {compressImage} from '@/lib/image/compress';
 import {formatDayLabel, formatTimeLabel} from '@/lib/date/manila';
 import {useMeQuery} from '@/lib/hooks/auth/useMeQuery';
 import {useMembersQuery} from '@/lib/hooks/members/useMembersQuery';
@@ -22,6 +35,8 @@ import {
   useDeleteService,
   useSetAssignments
 } from '@/lib/hooks/schedule/useServiceMutations';
+import {useQueryClient} from '@tanstack/react-query';
+import {serviceQueryKey} from '@/lib/hooks/schedule/useServiceQuery';
 import {useServiceQuery} from '@/lib/hooks/schedule/useServiceQuery';
 import {SERVICE_TYPE_LABELS} from '@/lib/schedule/services';
 
@@ -35,6 +50,7 @@ export default function ServiceDetailsPage() {
 
   const {data: me} = useMeQuery();
   const canManage = isAdmin(me?.user);
+  const queryClient = useQueryClient();
 
   const {data, isPending, isError, error, refetch} = useServiceQuery(id);
 
@@ -42,6 +58,32 @@ export default function ServiceDetailsPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isChangingService, setIsChangingService] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Listen for paste events to capture images from the clipboard.
+  useEffect(() => {
+    function handlePaste(event: ClipboardEvent) {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            event.preventDefault();
+            void handlePhotoUpload(file);
+            return;
+          }
+        }
+      }
+    }
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const membersQuery = useMembersQuery({enabled: canManage && isEditing});
   const setAssignments = useSetAssignments();
@@ -107,6 +149,53 @@ export default function ServiceDetailsPage() {
     }
   }
 
+  async function handlePhotoUpload(file: File | Blob) {
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      const compressed = await compressImage(file);
+      const updatedService = await uploadServicePhoto(id, compressed);
+      // Update the cached service data.
+      queryClient.setQueryData(serviceQueryKey(id), (previous: unknown) => {
+        if (!previous || typeof previous !== 'object') return previous;
+        return {...(previous as Record<string, unknown>), service: updatedService};
+      });
+    } catch (err) {
+      setPhotoError(
+        getFriendlyErrorMessage(err, 'We could not upload the photo. Please try again.')
+      );
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      const updatedService = await deleteServicePhoto(id);
+      queryClient.setQueryData(serviceQueryKey(id), (previous: unknown) => {
+        if (!previous || typeof previous !== 'object') return previous;
+        return {...(previous as Record<string, unknown>), service: updatedService};
+      });
+    } catch (err) {
+      setPhotoError(
+        getFriendlyErrorMessage(err, 'We could not remove the photo. Please try again.')
+      );
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      void handlePhotoUpload(file);
+    }
+    // Reset the input so the same file can be selected again.
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   return (
     <>
       <ScreenHeader
@@ -146,6 +235,68 @@ export default function ServiceDetailsPage() {
               {service.notes}
             </p>
           )}
+
+          {/* Photo of the assigned volunteers (Phase 5). */}
+          <div className="mt-4">
+            {service.photoUrl ? (
+              <div className="overflow-hidden rounded-card border border-border">
+                <img
+                  src={service.photoUrl}
+                  alt="This week's team"
+                  className="w-full object-cover"
+                />
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => void handlePhotoRemove()}
+                    disabled={isUploadingPhoto}
+                    className="flex h-10 w-full items-center justify-center gap-2 text-sm font-medium text-danger transition-colors duration-150 ease-out active:bg-danger/10 disabled:opacity-60"
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    Remove photo
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-card border border-dashed border-border bg-muted-surface/50 px-4 py-6 text-center">
+                <ImageIcon
+                  className="mx-auto size-8 text-muted"
+                  aria-hidden="true"
+                />
+                <p className="mt-2 text-sm text-muted">
+                  {isUploadingPhoto
+                    ? 'Uploading photo…'
+                    : 'Paste a photo or tap to upload'}
+                </p>
+                <div className="mt-3 flex justify-center gap-2">
+                  <PillButton
+                    type="button"
+                    variant="outline"
+                    fullWidth={false}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="h-10 px-4 text-sm"
+                  >
+                    <Upload className="mr-1 size-4" aria-hidden="true" />
+                    Choose photo
+                  </PillButton>
+                </div>
+              </div>
+            )}
+
+            {photoError && (
+              <p className="mt-2 text-sm text-danger">{photoError}</p>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              aria-label="Choose a photo"
+            />
+          </div>
         </section>
 
         <section className="mt-4">

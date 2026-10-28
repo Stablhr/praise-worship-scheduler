@@ -192,6 +192,44 @@ export const serviceService = {
     await serviceRepository.deleteById(id);
   },
 
+  /** Sets or replaces the photo for a service. */
+  async setPhoto(id: string, photoUrl: string): Promise<ServiceDocument> {
+    await requireService(id);
+
+    const updated = await serviceRepository.updateById(id, {
+      $set: {photoUrl}
+    });
+
+    if (!updated) {
+      throw new ApiError(
+        404,
+        ErrorCodes.SERVICE_NOT_FOUND,
+        'We could not find this service'
+      );
+    }
+
+    return updated;
+  },
+
+  /** Removes the photo from a service. */
+  async removePhoto(id: string): Promise<ServiceDocument> {
+    await requireService(id);
+
+    const updated = await serviceRepository.updateById(id, {
+      $unset: {photoUrl: 1}
+    });
+
+    if (!updated) {
+      throw new ApiError(
+        404,
+        ErrorCodes.SERVICE_NOT_FOUND,
+        'We could not find this service'
+      );
+    }
+
+    return updated;
+  },
+
   /**
    * Replaces every assignment of one service. The admin sends the finished
    * picture, so a role they left empty is simply empty.

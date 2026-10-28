@@ -116,3 +116,28 @@ export async function generateServices(
 
   return res.data;
 }
+
+/** Uploads a photo for a service. Returns the updated service. */
+export async function uploadServicePhoto(
+  id: string,
+  file: File | Blob
+): Promise<ServiceSummary> {
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const res = await httpClient.post<{service: ServiceSummary}>(
+    `/services/${id}/photo`,
+    formData,
+    {headers: {'Content-Type': 'multipart/form-data'}}
+  );
+
+  return res.data.service;
+}
+
+/** Removes the photo from a service. */
+export async function deleteServicePhoto(id: string): Promise<ServiceSummary> {
+  const res = await httpClient.delete<{service: ServiceSummary}>(
+    `/services/${id}/photo`
+  );
+  return res.data.service;
+}

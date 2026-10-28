@@ -35,6 +35,9 @@ app.use(csrfProtection);
 
 app.use('/api', routes);
 
+// Serve uploaded photos.
+app.use('/uploads', express.static('uploads'));
+
 app.get('/', async (_req, res) => {
   res.send('test production!');
 });

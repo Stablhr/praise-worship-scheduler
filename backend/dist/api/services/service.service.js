@@ -109,6 +109,28 @@ exports.serviceService = {
         await assignment_repository_1.assignmentRepository.deleteByService(id);
         await service_repository_1.serviceRepository.deleteById(id);
     },
+    /** Sets or replaces the photo for a service. */
+    async setPhoto(id, photoUrl) {
+        await requireService(id);
+        const updated = await service_repository_1.serviceRepository.updateById(id, {
+            $set: { photoUrl }
+        });
+        if (!updated) {
+            throw new error_1.ApiError(404, errorCodes_1.ErrorCodes.SERVICE_NOT_FOUND, 'We could not find this service');
+        }
+        return updated;
+    },
+    /** Removes the photo from a service. */
+    async removePhoto(id) {
+        await requireService(id);
+        const updated = await service_repository_1.serviceRepository.updateById(id, {
+            $unset: { photoUrl: 1 }
+        });
+        if (!updated) {
+            throw new error_1.ApiError(404, errorCodes_1.ErrorCodes.SERVICE_NOT_FOUND, 'We could not find this service');
+        }
+        return updated;
+    },
     /**
      * Replaces every assignment of one service. The admin sends the finished
      * picture, so a role they left empty is simply empty.

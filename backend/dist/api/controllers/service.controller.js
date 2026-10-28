@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.serviceController = void 0;
+const error_1 = require("../utils/error");
 const service_service_1 = require("../services/service.service");
 /**
  * Schedule routes are thin (backend/AGENTS.md): validate in the route, decide in
@@ -69,6 +70,29 @@ exports.serviceController = {
                 created: created.map(service_service_1.toServiceDto),
                 skipped
             });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    async uploadPhoto(req, res, next) {
+        try {
+            const file = req.file;
+            if (!file) {
+                throw new error_1.ApiError(400, 'VALIDATION_ERROR', 'No photo was uploaded');
+            }
+            const photoUrl = `/uploads/${file.filename}`;
+            const service = await service_service_1.serviceService.setPhoto(req.params.id, photoUrl);
+            res.status(200).json({ service: (0, service_service_1.toServiceDto)(service) });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    async removePhoto(req, res, next) {
+        try {
+            const service = await service_service_1.serviceService.removePhoto(req.params.id);
+            res.status(200).json({ service: (0, service_service_1.toServiceDto)(service) });
         }
         catch (error) {
             next(error);

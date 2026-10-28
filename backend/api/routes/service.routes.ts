@@ -11,6 +11,7 @@ import {
 import {requireAuth} from '../middleware/auth';
 import {requireAdmin, requireMember} from '../middleware/permission';
 import {defaultLimiter} from '../middleware/rateLimit';
+import {upload} from '../middleware/upload';
 
 const router = Router();
 
@@ -46,5 +47,15 @@ router.put(
   validate(setAssignmentsDto),
   serviceController.setAssignments
 );
+
+// Photo upload (any member can paste a photo). Delete is admin only.
+router.post(
+  '/:id/photo',
+  requireMember,
+  upload.single('photo'),
+  serviceController.uploadPhoto
+);
+
+router.delete('/:id/photo', requireAdmin, serviceController.removePhoto);
 
 export default router;

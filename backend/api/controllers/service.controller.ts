@@ -1,4 +1,5 @@
 import {Request, Response, NextFunction} from 'express';
+import {ApiError} from '../utils/error';
 import {serviceService, toServiceDto} from '../services/service.service';
 
 /**
@@ -80,6 +81,33 @@ export const serviceController = {
         created: created.map(toServiceDto),
         skipped
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async uploadPhoto(req: Request, res: Response, next: NextFunction) {
+    try {
+      const file = req.file;
+
+      if (!file) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'No photo was uploaded');
+      }
+
+      const photoUrl = `/uploads/${file.filename}`;
+      const service = await serviceService.setPhoto(req.params.id, photoUrl);
+
+      res.status(200).json({service: toServiceDto(service)});
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async removePhoto(req: Request, res: Response, next: NextFunction) {
+    try {
+      const service = await serviceService.removePhoto(req.params.id);
+
+      res.status(200).json({service: toServiceDto(service)});
     } catch (error) {
       next(error);
     }

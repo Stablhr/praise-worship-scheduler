@@ -32,6 +32,8 @@ app.use(sanitize_1.sanitize);
 app.use(requestLogger_1.requestLogger);
 app.use(csrf_1.csrfProtection);
 app.use('/api', index_1.default);
+// Serve uploaded photos.
+app.use('/uploads', express_1.default.static('uploads'));
 app.get('/', async (_req, res) => {
     res.send('test production!');
 });
