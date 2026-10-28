@@ -230,7 +230,7 @@ The app was built in phases. See `PLAN.md` for the full plan.
 | 5. Dashboard & Photo Paste | ✅ Done | Next Service card, assignments, clipboard photo paste |
 | 6. Notifications | ✅ Done | In-app notifications, reminder cron, unread badge |
 | 7. Settings | ✅ Done | Profile, theme, notifications toggle, admin settings |
-| 8. Capacitor & Polish | ⬜ Pending | Android/iOS wrapper, app icon, accessibility pass |
+| 8. Capacitor & Polish | ✅ Done | Android/iOS wrapper, app icon, splash screen, safe areas |
 
 ## 🌿 Git Branching Workflow
 
