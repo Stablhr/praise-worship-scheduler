@@ -65,6 +65,41 @@ exports.authController = {
             next(error);
         }
     },
+    async uploadPhoto(req, res, next) {
+        try {
+            if (!req.auth) {
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+            }
+            if (req.auth.type !== 'member') {
+                throw new error_1.ApiError(403, errorCodes_1.ErrorCodes.FORBIDDEN, 'Only members can update their profile');
+            }
+            const file = req.file;
+            if (!file) {
+                throw new error_1.ApiError(400, errorCodes_1.ErrorCodes.VALIDATION_ERROR, 'No photo was uploaded');
+            }
+            const photoUrl = `/uploads/${file.filename}`;
+            const member = await member_service_1.memberService.updateProfile(req.auth.userId, { photoUrl });
+            res.status(200).json({ user: (0, member_service_1.toMemberProfile)(member) });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    async removePhoto(req, res, next) {
+        try {
+            if (!req.auth) {
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+            }
+            if (req.auth.type !== 'member') {
+                throw new error_1.ApiError(403, errorCodes_1.ErrorCodes.FORBIDDEN, 'Only members can update their profile');
+            }
+            const member = await member_service_1.memberService.updateProfile(req.auth.userId, { photoUrl: '' });
+            res.status(200).json({ user: (0, member_service_1.toMemberProfile)(member) });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
     async memberRegister(req, res, next) {
         try {
             const { member, accessToken, refreshToken } = await member_service_1.memberService.register(req.body);

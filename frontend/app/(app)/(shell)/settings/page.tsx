@@ -1,15 +1,16 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {
   Bell,
+  Camera,
   ChevronDown,
   LogOut,
   Moon,
   Palette,
   Settings as SettingsIcon,
   Sun,
-  User
+  Trash2
 } from 'lucide-react';
 import {BottomSheet} from '@/components/app/BottomSheet';
 
@@ -19,11 +20,13 @@ import {ScreenHeader} from '@/components/app/ScreenHeader';
 import {Skeleton} from '@/components/ui/skeleton';
 import {getFriendlyErrorMessage} from '@/lib/api/getFriendlyErrorMessage';
 import {isAdmin} from '@/lib/auth/permissions';
+import {Avatar} from '@/components/app/Avatar';
+import {compressImage} from '@/lib/image/compress';
 import {meQueryKey, useMeQuery} from '@/lib/hooks/auth/useMeQuery';
 import {useLogout} from '@/lib/hooks/auth/useLogout';
 import {useQueryClient} from '@tanstack/react-query';
 import {useRouter} from 'next/navigation';
-import {updateMe} from '@/lib/api/authApi';
+import {removeProfilePhoto, updateMe, uploadProfilePhoto} from '@/lib/api/authApi';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -44,6 +47,9 @@ export default function SettingsPage() {
   const [themeSheetOpen, setThemeSheetOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync state when member data first loads.
   useEffect(() => {
@@ -95,6 +101,47 @@ export default function SettingsPage() {
     }
   }
 
+  async function handlePhotoUpload(file: File | Blob) {
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      const compressed = await compressImage(file);
+      const result = await uploadProfilePhoto(compressed);
+      queryClient.setQueryData(meQueryKey, result);
+      void queryClient.invalidateQueries({queryKey: meQueryKey});
+    } catch (err) {
+      setPhotoError(
+        getFriendlyErrorMessage(err, 'We could not upload the photo. Please try again.')
+      );
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      const result = await removeProfilePhoto();
+      queryClient.setQueryData(meQueryKey, result);
+      void queryClient.invalidateQueries({queryKey: meQueryKey});
+    } catch (err) {
+      setPhotoError(
+        getFriendlyErrorMessage(err, 'We could not remove the photo. Please try again.')
+      );
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      void handlePhotoUpload(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   async function handleLogout() {
     try {
       await logout.mutateAsync();
@@ -125,8 +172,22 @@ export default function SettingsPage() {
         {/* Profile section */}
         <section className="rounded-card border border-border bg-surface p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <User className="size-6" aria-hidden="true" />
+            <div className="relative">
+              <Avatar
+                name={member.name ?? ''}
+                photoUrl={member.photoUrl}
+                size="lg"
+                className="!size-16"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                aria-label="Change profile photo"
+                className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow transition-colors duration-150 ease-out active:bg-primary-dark disabled:opacity-60"
+              >
+                <Camera className="size-4" aria-hidden="true" />
+              </button>
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-heading text-base font-semibold text-text">
@@ -136,8 +197,36 @@ export default function SettingsPage() {
               {member.position && (
                 <p className="text-xs text-muted">{member.position}</p>
               )}
+              {member.photoUrl && (
+                <button
+                  type="button"
+                  onClick={() => void handlePhotoRemove()}
+                  disabled={isUploadingPhoto}
+                  className="mt-1 flex items-center gap-1 text-xs text-danger transition-colors duration-150 ease-out active:underline disabled:opacity-60"
+                >
+                  <Trash2 className="size-3" aria-hidden="true" />
+                  Remove photo
+                </button>
+              )}
             </div>
           </div>
+
+          {photoError && (
+            <p className="mt-2 text-sm text-danger">{photoError}</p>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+            aria-label="Choose a profile photo"
+          />
+
+          {isUploadingPhoto && (
+            <p className="mt-2 text-sm text-muted">Uploading photo…</p>
+          )}
         </section>
 
         {/* App settings */}

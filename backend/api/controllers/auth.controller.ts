@@ -6,6 +6,7 @@ import {ApiError} from '../utils/error';
 import {ErrorCodes} from '../constants/errorCodes';
 import {env} from '../config/env';
 import {ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE} from '../constants/cookies';
+import {upload} from '../middleware/upload';
 
 const COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
@@ -70,6 +71,49 @@ export const authController = {
       }
 
       const member = await memberService.updateProfile(req.auth.userId, req.body);
+      res.status(200).json({user: toMemberProfile(member)});
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async uploadPhoto(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.auth) {
+        throw new ApiError(401, ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+      }
+
+      if (req.auth.type !== 'member') {
+        throw new ApiError(403, ErrorCodes.FORBIDDEN, 'Only members can update their profile');
+      }
+
+      const file = req.file;
+
+      if (!file) {
+        throw new ApiError(400, ErrorCodes.VALIDATION_ERROR, 'No photo was uploaded');
+      }
+
+      const photoUrl = `/uploads/${file.filename}`;
+      const member = await memberService.updateProfile(req.auth.userId, {photoUrl});
+
+      res.status(200).json({user: toMemberProfile(member)});
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async removePhoto(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.auth) {
+        throw new ApiError(401, ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+      }
+
+      if (req.auth.type !== 'member') {
+        throw new ApiError(403, ErrorCodes.FORBIDDEN, 'Only members can update their profile');
+      }
+
+      const member = await memberService.updateProfile(req.auth.userId, {photoUrl: ''});
+
       res.status(200).json({user: toMemberProfile(member)});
     } catch (error) {
       next(error);

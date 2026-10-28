@@ -72,3 +72,18 @@ export async function updateMe(changes: {
   const res = await httpClient.patch<MeResponse>('/auth/me', changes);
   return res.data;
 }
+
+export async function uploadProfilePhoto(file: File | Blob): Promise<MeResponse> {
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const res = await httpClient.post<MeResponse>('/auth/me/photo', formData, {
+    headers: {'Content-Type': 'multipart/form-data'}
+  });
+  return res.data;
+}
+
+export async function removeProfilePhoto(): Promise<MeResponse> {
+  const res = await httpClient.delete<MeResponse>('/auth/me/photo');
+  return res.data;
+}

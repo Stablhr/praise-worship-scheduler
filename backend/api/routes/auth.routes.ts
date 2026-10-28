@@ -20,6 +20,7 @@ import {
   authReadLimiter
 } from '../middleware/rateLimit';
 import {requireAuth} from '../middleware/auth';
+import {upload} from '../middleware/upload';
 import {issueCsrfToken} from '../middleware/csrf';
 
 const router = Router();
@@ -100,5 +101,7 @@ router.get('/csrf', authActionLimiter, issueCsrfToken);
 // read-only — lenient limit
 router.get('/me', authReadLimiter, requireAuth, authController.me);
 router.patch('/me', authActionLimiter, requireAuth, authController.patchMe);
+router.post('/me/photo', authActionLimiter, requireAuth, upload.single('photo'), authController.uploadPhoto);
+router.delete('/me/photo', authActionLimiter, requireAuth, authController.removePhoto);
 
 export default router;

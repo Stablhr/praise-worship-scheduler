@@ -6,6 +6,7 @@ const validation_1 = require("../middleware/validation");
 const auth_dto_1 = require("../dtos/auth.dto");
 const rateLimit_1 = require("../middleware/rateLimit");
 const auth_1 = require("../middleware/auth");
+const upload_1 = require("../middleware/upload");
 const csrf_1 = require("../middleware/csrf");
 const router = (0, express_1.Router)();
 // sensitive write operations — strict limit
@@ -29,4 +30,6 @@ router.get('/csrf', rateLimit_1.authActionLimiter, csrf_1.issueCsrfToken);
 // read-only — lenient limit
 router.get('/me', rateLimit_1.authReadLimiter, auth_1.requireAuth, auth_controller_1.authController.me);
 router.patch('/me', rateLimit_1.authActionLimiter, auth_1.requireAuth, auth_controller_1.authController.patchMe);
+router.post('/me/photo', rateLimit_1.authActionLimiter, auth_1.requireAuth, upload_1.upload.single('photo'), auth_controller_1.authController.uploadPhoto);
+router.delete('/me/photo', rateLimit_1.authActionLimiter, auth_1.requireAuth, auth_controller_1.authController.removePhoto);
 exports.default = router;
