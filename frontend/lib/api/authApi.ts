@@ -13,6 +13,11 @@ export type MeUser = {
   permission?: MemberPermission;
   photoUrl?: string;
   position?: string;
+  preferences?: {
+    theme?: 'light' | 'dark' | 'system';
+    language?: string;
+    notificationsEnabled?: boolean;
+  };
 };
 
 export type MeResponse = {
@@ -51,5 +56,19 @@ export async function memberRegister(params: {
 
 export async function getMe() {
   const res = await httpClient.get<MeResponse>('/auth/me');
+  return res.data;
+}
+
+export async function updateMe(changes: {
+  name?: string;
+  photoUrl?: string;
+  position?: string;
+  preferences?: {
+    theme?: 'light' | 'dark' | 'system';
+    language?: string;
+    notificationsEnabled?: boolean;
+  };
+}): Promise<MeResponse> {
+  const res = await httpClient.patch<MeResponse>('/auth/me', changes);
   return res.data;
 }

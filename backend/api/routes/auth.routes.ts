@@ -99,5 +99,6 @@ router.get('/csrf', authActionLimiter, issueCsrfToken);
 
 // read-only — lenient limit
 router.get('/me', authReadLimiter, requireAuth, authController.me);
+router.patch('/me', authActionLimiter, requireAuth, authController.patchMe);
 
 export default router;

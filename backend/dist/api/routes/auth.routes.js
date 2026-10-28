@@ -28,4 +28,5 @@ router.put('/password', rateLimit_1.authActionLimiter, auth_1.requireAuth, (0, v
 router.get('/csrf', rateLimit_1.authActionLimiter, csrf_1.issueCsrfToken);
 // read-only — lenient limit
 router.get('/me', rateLimit_1.authReadLimiter, auth_1.requireAuth, auth_controller_1.authController.me);
+router.patch('/me', rateLimit_1.authActionLimiter, auth_1.requireAuth, auth_controller_1.authController.patchMe);
 exports.default = router;

@@ -50,6 +50,21 @@ exports.authController = {
             next(error);
         }
     },
+    async patchMe(req, res, next) {
+        try {
+            if (!req.auth) {
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+            }
+            if (req.auth.type !== 'member') {
+                throw new error_1.ApiError(403, errorCodes_1.ErrorCodes.FORBIDDEN, 'Only members can update their profile');
+            }
+            const member = await member_service_1.memberService.updateProfile(req.auth.userId, req.body);
+            res.status(200).json({ user: (0, member_service_1.toMemberProfile)(member) });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
     async memberRegister(req, res, next) {
         try {
             const { member, accessToken, refreshToken } = await member_service_1.memberService.register(req.body);

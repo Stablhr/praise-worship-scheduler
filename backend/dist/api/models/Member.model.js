@@ -54,6 +54,11 @@ const MemberSchema = new mongoose_1.Schema({
         required: true
     },
     position: { type: String, trim: true },
-    pushTokens: { type: [String], default: [] }
+    pushTokens: { type: [String], default: [] },
+    preferences: {
+        theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+        language: { type: String, default: 'en' },
+        notificationsEnabled: { type: Boolean, default: true }
+    }
 }, { timestamps: true });
 exports.MemberModel = mongoose_1.default.model('Member', MemberSchema, 'members');

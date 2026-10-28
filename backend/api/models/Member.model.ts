@@ -20,6 +20,12 @@ export interface MemberDocument extends mongoose.Document {
   position?: string;
   /** Device push tokens (used from Phase 6 onwards). */
   pushTokens: string[];
+  /** App preferences. */
+  preferences?: {
+    theme?: 'light' | 'dark' | 'system';
+    language?: string;
+    notificationsEnabled?: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,7 +50,12 @@ const MemberSchema = new Schema<MemberDocument>(
       required: true
     },
     position: {type: String, trim: true},
-    pushTokens: {type: [String], default: []}
+    pushTokens: {type: [String], default: []},
+    preferences: {
+      theme: {type: String, enum: ['light', 'dark', 'system'], default: 'system'},
+      language: {type: String, default: 'en'},
+      notificationsEnabled: {type: Boolean, default: true}
+    }
   },
   {timestamps: true}
 );

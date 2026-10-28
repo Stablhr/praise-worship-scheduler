@@ -19,6 +19,11 @@ export type MemberProfile = {
   permission: MemberPermission;
   photoUrl?: string;
   position?: string;
+  preferences?: {
+    theme: 'light' | 'dark' | 'system';
+    language: string;
+    notificationsEnabled: boolean;
+  };
 };
 
 export function toMemberProfile(member: MemberDocument): MemberProfile {
@@ -29,7 +34,14 @@ export function toMemberProfile(member: MemberDocument): MemberProfile {
     email: member.email,
     permission: member.permission,
     photoUrl: member.photoUrl,
-    position: member.position
+    position: member.position,
+    preferences: member.preferences
+      ? {
+          theme: member.preferences.theme ?? 'system',
+          language: member.preferences.language ?? 'en',
+          notificationsEnabled: member.preferences.notificationsEnabled ?? true
+        }
+      : {theme: 'system', language: 'en', notificationsEnabled: true}
   };
 }
 
@@ -156,6 +168,74 @@ export const memberService = {
     }
 
     return member;
+  },
+
+  /** Updates the signed-in member's own profile and preferences. */
+  async updateProfile(
+    memberId: string,
+    changes: {
+      name?: string;
+      photoUrl?: string;
+      position?: string;
+      preferences?: {
+        theme?: 'light' | 'dark' | 'system';
+        language?: string;
+        notificationsEnabled?: boolean;
+      };
+    }
+  ): Promise<MemberDocument> {
+    const member = await memberRepository.findById(memberId);
+
+    if (!member) {
+      throw new ApiError(404, ErrorCodes.MEMBER_NOT_FOUND, 'Member not found');
+    }
+
+    const update: UpdateQuery<MemberDocument> = {};
+
+    if (changes.name !== undefined) {
+      update.$set = {...update.$set, name: changes.name.trim()};
+    }
+
+    if (changes.photoUrl !== undefined) {
+      if (changes.photoUrl) {
+        update.$set = {...update.$set, photoUrl: changes.photoUrl};
+      } else {
+        update.$unset = {...update.$unset, photoUrl: 1};
+      }
+    }
+
+    if (changes.position !== undefined) {
+      const position = changes.position.trim();
+      if (position) {
+        update.$set = {...update.$set, position};
+      } else {
+        update.$unset = {...update.$unset, position: 1};
+      }
+    }
+
+    if (changes.preferences) {
+      const prefs = changes.preferences;
+      if (prefs.theme !== undefined) {
+        update.$set = {...update.$set, 'preferences.theme': prefs.theme};
+      }
+      if (prefs.language !== undefined) {
+        update.$set = {...update.$set, 'preferences.language': prefs.language};
+      }
+      if (prefs.notificationsEnabled !== undefined) {
+        update.$set = {
+          ...update.$set,
+          'preferences.notificationsEnabled': prefs.notificationsEnabled
+        };
+      }
+    }
+
+    const updated = await memberRepository.updateById(memberId, update);
+
+    if (!updated) {
+      throw new ApiError(404, ErrorCodes.MEMBER_NOT_FOUND, 'Member not found');
+    }
+
+    return updated;
   },
 
   /** The whole team, for the Members screen. */

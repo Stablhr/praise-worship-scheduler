@@ -46,7 +46,13 @@ export default function MorePage() {
               </span>
             )}
           </Link>
-          <Row icon={Settings} label="Settings" note="Arrives in Phase 7" />
+          <Link
+            href="/settings"
+            className="flex min-h-[44px] items-center gap-3 border-b border-border px-4 py-3 transition-colors duration-150 ease-out active:bg-secondary last:border-b-0"
+          >
+            <Settings className="size-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
+            <span className="flex-1 text-sm font-medium text-text">Settings</span>
+          </Link>
         </div>
 
         <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
@@ -67,20 +73,4 @@ export default function MorePage() {
   );
 }
 
-function Row({
-  icon: Icon,
-  label,
-  note
-}: {
-  icon: typeof Bell;
-  label: string;
-  note: string;
-}) {
-  return (
-    <div className="flex min-h-[44px] items-center gap-3 border-b border-border px-4 py-3 last:border-b-0">
-      <Icon className="size-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
-      <span className="flex-1 text-sm font-medium text-text">{label}</span>
-      <span className="text-xs text-muted">{note}</span>
-    </div>
-  );
-}
+
