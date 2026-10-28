@@ -2,23 +2,19 @@
 
 import Link from 'next/link';
 import {Bell} from 'lucide-react';
-import {Avatar} from './Avatar';
 import {BrandLogo} from './BrandLogo';
 import {useUnreadCountQuery} from '@/lib/hooks/notifications/useNotificationsQuery';
 
 type TopBarProps = {
-  memberName: string;
-  photoUrl?: string;
   /** Wired up in Phase 6 (Notifications). */
   unreadCount?: number;
 };
 
 /**
  * Blue top bar used on Home (DESIGN.md section 5).
- * The bell and the profile photo are placeholders until the Notifications
- * (Phase 6) and Settings (Phase 7) screens exist.
+ * The bell opens /notifications. The profile photo is now in the bottom tab bar.
  */
-export function TopBar({memberName, photoUrl, unreadCount: propUnreadCount = 0}: TopBarProps) {
+export function TopBar({unreadCount: propUnreadCount = 0}: TopBarProps) {
   const {data: fetchedCount} = useUnreadCountQuery();
   const unreadCount = fetchedCount ?? propUnreadCount;
 
@@ -34,7 +30,7 @@ export function TopBar({memberName, photoUrl, unreadCount: propUnreadCount = 0}:
 
         <div className="flex items-center gap-1">
           <Link
-            href="/more"
+            href="/notifications"
             aria-label="Notifications"
             className="relative flex size-11 items-center justify-center rounded-full text-primary-foreground transition-colors duration-150 ease-out active:bg-primary-dark"
           >
@@ -42,14 +38,6 @@ export function TopBar({memberName, photoUrl, unreadCount: propUnreadCount = 0}:
             {unreadCount > 0 && (
               <span className="absolute right-2 top-2.5 size-2 rounded-full bg-accent" />
             )}
-          </Link>
-
-          <Link
-            href="/more"
-            aria-label="Your profile"
-            className="flex size-11 items-center justify-center rounded-full transition-colors duration-150 ease-out active:bg-primary-dark"
-          >
-            <Avatar name={memberName} photoUrl={photoUrl} size="sm" />
           </Link>
         </div>
       </div>

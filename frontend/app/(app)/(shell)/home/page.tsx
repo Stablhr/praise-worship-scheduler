@@ -53,7 +53,7 @@ export default function HomePage() {
   if (!member?.name) {
     return (
       <>
-        <TopBar memberName="…" />
+        <TopBar />
         <HomeSkeleton />
       </>
     );
@@ -61,7 +61,7 @@ export default function HomePage() {
 
   return (
     <>
-      <TopBar memberName={member.name} photoUrl={member.photoUrl} />
+      <TopBar />
 
       <div className="mx-auto w-full max-w-[480px] px-4 py-4">
         <h1 className="font-heading text-xl font-semibold leading-7 text-text">

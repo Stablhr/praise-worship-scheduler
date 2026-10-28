@@ -97,7 +97,7 @@ There is **no multimedia role**. It was removed.
 
 ## 7. Design in one paragraph
 
-Blue and yellow brand colors, taken from a mockup the user supplied. Clean, rounded, friendly. The navigation copies the **Netflix mobile app** pattern: a fixed bottom tab bar (Home, Schedule, Lineups, Members, More), a slim top bar with the logo and profile, and swipeable rows of cards on Home. Full details are in `DESIGN.md`.
+Blue and yellow brand colors, taken from a mockup the user supplied. Clean, rounded, friendly. The navigation copies the **Netflix mobile app** pattern: a fixed bottom tab bar (Home, Schedule, Lineups, Members, Profile), a slim top bar with the logo and notification bell, and swipeable rows of cards on Home. Full details are in `DESIGN.md`.
 
 ---
 

@@ -29,7 +29,7 @@ Adapt to the existing folders. This is the target shape:
       /schedule
       /lineups
       /members
-      /more
+      /settings
       /notifications
       /settings
   /components      (BottomNav, TopBar, Cards, Tags, Avatar, Modals...)

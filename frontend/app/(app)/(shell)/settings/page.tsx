@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import {BottomSheet} from '@/components/app/BottomSheet';
 
+import {ConfirmDialog} from '@/components/app/ConfirmDialog';
 import {PillButton} from '@/components/app/PillButton';
 import {ScreenHeader} from '@/components/app/ScreenHeader';
 import {Skeleton} from '@/components/ui/skeleton';
@@ -41,6 +42,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [themeSheetOpen, setThemeSheetOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   // Sync state when member data first loads.
@@ -103,7 +105,7 @@ export default function SettingsPage() {
   if (isPending || !member) {
     return (
       <>
-        <ScreenHeader title="Settings" backHref="/more" />
+        <ScreenHeader title="Settings" />
         <div className="mx-auto w-full max-w-[480px] space-y-3 px-4 py-4">
           <Skeleton className="h-16 w-full rounded-card" />
           <Skeleton className="h-16 w-full rounded-card" />
@@ -115,7 +117,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      <ScreenHeader title="Settings" backHref="/more" />
+      <ScreenHeader title="Settings" />
 
       <div className="mx-auto w-full max-w-[480px] space-y-4 px-4 py-4">
         {/* Profile section */}
@@ -220,6 +222,13 @@ export default function SettingsPage() {
               </span>
               <span className="text-xs text-muted">Admin</span>
             </div>
+            <div className="flex min-h-[44px] items-center gap-3 border-b border-border px-4 py-3">
+              <SettingsIcon className="size-5 text-primary" aria-hidden="true" />
+              <span className="flex-1 text-sm font-medium text-text">
+                Help and Support
+              </span>
+              <span className="text-xs text-muted">Contact us</span>
+            </div>
             <div className="flex min-h-[44px] items-center gap-3 px-4 py-3">
               <SettingsIcon className="size-5 text-primary" aria-hidden="true" />
               <span className="flex-1 text-sm font-medium text-text">
@@ -233,13 +242,25 @@ export default function SettingsPage() {
         {/* Log out */}
         <button
           type="button"
-          onClick={() => void handleLogout()}
+          onClick={() => setShowLogoutConfirm(true)}
           disabled={logout.isPending}
           className="flex min-h-[44px] w-full items-center gap-3 rounded-card border border-danger/30 bg-surface px-4 py-3 text-left text-sm font-semibold text-danger transition-colors duration-150 ease-out active:bg-danger/10 disabled:opacity-60"
         >
           <LogOut className="size-5" aria-hidden="true" />
           {logout.isPending ? 'Logging out…' : 'Log out'}
         </button>
+
+        <ConfirmDialog
+          open={showLogoutConfirm}
+          onOpenChange={setShowLogoutConfirm}
+          title="Log out?"
+          description="You will need to sign in again to access the app."
+          confirmLabel="Log out"
+          loadingLabel="Logging out…"
+          isLoading={logout.isPending}
+          isDestructive
+          onConfirm={() => void handleLogout()}
+        />
       </div>
 
       {/* Theme picker sheet */}

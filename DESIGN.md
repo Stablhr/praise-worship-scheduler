@@ -91,19 +91,18 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 
 ### Bottom tab bar
 - Fixed to the bottom, full width, always visible on main screens.
-- Five tabs in this order: **Home, Schedule, Lineups, Members, More**.
-- Each tab: icon (24 px) above a short label (11 px).
-- Active tab: icon and label in `--primary`, bold label, and a short yellow bar (`--accent`, 3 px tall, 24 px wide) above the icon.
+- Five tabs in this order: **Home, Schedule, Lineups, Members, Profile**.
+- Each tab: icon (24 px) above a short label (11 px). The Profile tab uses the member's round avatar (24 px) instead of a Lucide icon.
+- Active tab: icon and label in `--primary`, bold label, and a short yellow bar (`--accent`, 3 px tall, 24 px wide) above the icon. The Profile tab avatar gets a 2 px primary-blue ring when active.
 - Inactive tabs: `--muted`.
 - Height 64 px plus the device bottom safe-area inset.
 - Background `--surface` with a 1 px top border.
 - Tapping the active tab scrolls that screen to the top.
-- Show a small dot on **More** when there are unread notifications.
 
 ### Top bar
 - Slim, 56 px, blue (`--primary`) on Home, plain on other screens.
 - Left: church logo and the name "Praise & Worship Ministry".
-- Right: notification bell with unread badge, then the member's round profile photo (opens Settings).
+- Right: notification bell with unread badge (opens /notifications).
 - On inner screens: back arrow on the left, screen title in the center or left, and a contextual action on the right (calendar icon, yellow "+" button).
 
 ### Content rows
@@ -176,15 +175,12 @@ Copy the pattern only. Do not copy Netflix's logo, red color or name.
 - Admins see "Edit member" and "Remove member" in the menu; removing asks for confirmation.
 - "Add member" sheet (admin only): name, email, position, permission. The member sets their own password the first time they sign in.
 
-### 6.7 More (Notifications, Settings)
-- A simple list: Notifications (with unread count), Settings, Help and Support, Log out (red).
-
 ### 6.8 Notifications
 - Top bar title "Notifications".
 - Empty state: bell illustration, "You're all caught up."
 - Cards: reminder (yellow-tinted), new lineup, schedule change. Title, one line of detail, date and time. Unread cards have a blue dot.
 
-### 6.9 Settings
+### 6.9 Settings (Profile tab destination)
 - **Profile:** photo, name, position; tap to edit.
 - **App Settings:** Notifications, Appearance (Light, Dark, System), Language (English).
 - **System Settings:** About App with version, Help and Support, Log out. Admins also see service times and reminder timing.
