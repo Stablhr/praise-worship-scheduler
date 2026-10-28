@@ -1,7 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import {Bell} from 'lucide-react';
 import {Avatar} from './Avatar';
 import {BrandLogo} from './BrandLogo';
+import {useUnreadCountQuery} from '@/lib/hooks/notifications/useNotificationsQuery';
 
 type TopBarProps = {
   memberName: string;
@@ -15,7 +18,10 @@ type TopBarProps = {
  * The bell and the profile photo are placeholders until the Notifications
  * (Phase 6) and Settings (Phase 7) screens exist.
  */
-export function TopBar({memberName, photoUrl, unreadCount = 0}: TopBarProps) {
+export function TopBar({memberName, photoUrl, unreadCount: propUnreadCount = 0}: TopBarProps) {
+  const {data: fetchedCount} = useUnreadCountQuery();
+  const unreadCount = fetchedCount ?? propUnreadCount;
+
   return (
     <header className="sticky top-0 z-30 bg-primary pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-14 w-full max-w-[480px] items-center justify-between gap-2 px-2">

@@ -7,6 +7,8 @@ exports.default = handler;
 const app_1 = __importDefault(require("./app"));
 const db_1 = require("./api/config/db");
 const env_1 = require("./api/config/env");
+const node_cron_1 = __importDefault(require("node-cron"));
+const notification_service_1 = require("./api/services/notification.service");
 let dbInitPromise = null;
 const ensureDb = () => {
     if (!dbInitPromise) {
@@ -27,6 +29,12 @@ async function handler(req, res) {
 if (process.env.VERCEL !== '1') {
     ensureDb()
         .then(() => {
+        // Daily reminder job: 9:00 AM Asia/Manila = 1:00 AM UTC.
+        node_cron_1.default.schedule('0 1 * * *', () => {
+            notification_service_1.notificationService
+                .runReminderJob()
+                .catch(error => console.error('Reminder job failed', error));
+        });
         app_1.default.listen(env_1.env.PORT, () => {
             console.log(`Server listening on port ${env_1.env.PORT}`);
         });

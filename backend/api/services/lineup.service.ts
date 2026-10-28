@@ -4,6 +4,7 @@ import {LineupDocument} from '../models/Lineup.model';
 import {LineupModel} from '../models/Lineup.model';
 import {serviceRepository} from '../repositories/service.repository';
 import {lineupRepository} from '../repositories/lineup.repository';
+import {notificationService} from './notification.service';
 import type {AddSongDto, UpdateSongDto} from '../dtos/lineup.dto';
 
 /** One song as the app receives it. */
@@ -99,6 +100,9 @@ export const lineupService = {
       addedBy
     });
 
+    // Notify all members that the lineup changed.
+    void notificationService.notifyLineupChanged(serviceId);
+
     return toLineupDto(lineup);
   },
 
@@ -124,6 +128,8 @@ export const lineupService = {
       );
     }
 
+    void notificationService.notifyLineupChanged(serviceId);
+
     return toLineupDto(lineup);
   },
 
@@ -140,6 +146,8 @@ export const lineupService = {
         'We could not find this song'
       );
     }
+
+    void notificationService.notifyLineupChanged(serviceId);
 
     return toLineupDto(lineup);
   },
@@ -160,6 +168,8 @@ export const lineupService = {
         'We could not find a lineup for this service'
       );
     }
+
+    void notificationService.notifyLineupChanged(serviceId);
 
     return toLineupDto(lineup);
   }

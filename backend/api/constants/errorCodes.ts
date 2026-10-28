@@ -25,7 +25,8 @@ export const ErrorCodes = {
   INVALID_ROLE: 'INVALID_ROLE',
   DUPLICATE_ROLE: 'DUPLICATE_ROLE',
   LINEUP_NOT_FOUND: 'LINEUP_NOT_FOUND',
-  SONG_NOT_FOUND: 'SONG_NOT_FOUND'
+  SONG_NOT_FOUND: 'SONG_NOT_FOUND',
+  NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND'
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

@@ -3,8 +3,10 @@
 import {useRouter} from 'next/navigation';
 import {useQueryClient} from '@tanstack/react-query';
 import {Bell, LogOut, Settings} from 'lucide-react';
+import Link from 'next/link';
 import {ScreenHeader} from '@/components/app/ScreenHeader';
 import {useLogout} from '@/lib/hooks/auth/useLogout';
+import {useUnreadCountQuery} from '@/lib/hooks/notifications/useNotificationsQuery';
 
 /**
  * More tab (DESIGN.md section 6.7).
@@ -15,6 +17,7 @@ export default function MorePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const logout = useLogout();
+  const {data: unreadCount} = useUnreadCountQuery();
 
   const handleLogout = async () => {
     try {
@@ -31,11 +34,18 @@ export default function MorePage() {
 
       <div className="mx-auto w-full max-w-[480px] space-y-3 px-4 py-4">
         <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-          <Row
-            icon={Bell}
-            label="Notifications"
-            note="Arrives in Phase 6"
-          />
+          <Link
+            href="/notifications"
+            className="flex min-h-[44px] items-center gap-3 border-b border-border px-4 py-3 transition-colors duration-150 ease-out active:bg-secondary"
+          >
+            <Bell className="size-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
+            <span className="flex-1 text-sm font-medium text-text">Notifications</span>
+            {unreadCount !== undefined && unreadCount > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
+          </Link>
           <Row icon={Settings} label="Settings" note="Arrives in Phase 7" />
         </div>
 

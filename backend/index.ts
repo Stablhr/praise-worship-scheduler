@@ -1,6 +1,8 @@
 import app from './app';
 import {connectDb} from './api/config/db';
 import {env} from './api/config/env';
+import cron from 'node-cron';
+import {notificationService} from './api/services/notification.service';
 
 let dbInitPromise: Promise<unknown> | null = null;
 const ensureDb = () => {
@@ -26,6 +28,13 @@ export default async function handler(
 if (process.env.VERCEL !== '1') {
   ensureDb()
     .then(() => {
+      // Daily reminder job: 9:00 AM Asia/Manila = 1:00 AM UTC.
+      cron.schedule('0 1 * * *', () => {
+        notificationService
+          .runReminderJob()
+          .catch(error => console.error('Reminder job failed', error));
+      });
+
       app.listen(env.PORT, () => {
         console.log(`Server listening on port ${env.PORT}`);
       });

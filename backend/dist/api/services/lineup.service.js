@@ -7,6 +7,7 @@ const error_1 = require("../utils/error");
 const errorCodes_1 = require("../constants/errorCodes");
 const service_repository_1 = require("../repositories/service.repository");
 const lineup_repository_1 = require("../repositories/lineup.repository");
+const notification_service_1 = require("./notification.service");
 function toSongDto(song) {
     return {
         id: song._id.toString(),
@@ -53,6 +54,8 @@ exports.lineupService = {
             type: input.type,
             addedBy
         });
+        // Notify all members that the lineup changed.
+        void notification_service_1.notificationService.notifyLineupChanged(serviceId);
         return toLineupDto(lineup);
     },
     /** Updates a song and returns the updated lineup. */
@@ -66,6 +69,7 @@ exports.lineupService = {
         if (!lineup) {
             throw new error_1.ApiError(404, errorCodes_1.ErrorCodes.SONG_NOT_FOUND, 'We could not find this song');
         }
+        void notification_service_1.notificationService.notifyLineupChanged(serviceId);
         return toLineupDto(lineup);
     },
     /** Removes a song and returns the updated lineup. */
@@ -75,6 +79,7 @@ exports.lineupService = {
         if (!lineup) {
             throw new error_1.ApiError(404, errorCodes_1.ErrorCodes.SONG_NOT_FOUND, 'We could not find this song');
         }
+        void notification_service_1.notificationService.notifyLineupChanged(serviceId);
         return toLineupDto(lineup);
     },
     /** Reorders songs and returns the updated lineup. */
@@ -84,6 +89,7 @@ exports.lineupService = {
         if (!lineup) {
             throw new error_1.ApiError(404, errorCodes_1.ErrorCodes.LINEUP_NOT_FOUND, 'We could not find a lineup for this service');
         }
+        void notification_service_1.notificationService.notifyLineupChanged(serviceId);
         return toLineupDto(lineup);
     }
 };

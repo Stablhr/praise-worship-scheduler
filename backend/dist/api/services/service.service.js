@@ -9,6 +9,7 @@ const serviceRoles_1 = require("../constants/serviceRoles");
 const member_repository_1 = require("../repositories/member.repository");
 const assignment_repository_1 = require("../repositories/assignment.repository");
 const service_repository_1 = require("../repositories/service.repository");
+const notification_service_1 = require("./notification.service");
 const manila_1 = require("../utils/manila");
 function toServiceDto(service) {
     return {
@@ -156,6 +157,8 @@ exports.serviceService = {
             throw new error_1.ApiError(404, errorCodes_1.ErrorCodes.MEMBER_NOT_FOUND, 'One of the chosen members is no longer on the team list');
         }
         await assignment_repository_1.assignmentRepository.replaceForService(id, entries);
+        // Notify all members that assignments changed.
+        void notification_service_1.notificationService.notifyAssignmentsChanged(id);
         return buildRoles(service);
     },
     /**

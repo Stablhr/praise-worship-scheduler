@@ -14,6 +14,7 @@ import {
   assignmentRepository
 } from '../repositories/assignment.repository';
 import {serviceRepository} from '../repositories/service.repository';
+import {notificationService} from './notification.service';
 import {addDays, getWeekday, manilaDateKey, manilaInstant} from '../utils/manila';
 import type {
   CreateServiceDto,
@@ -276,6 +277,9 @@ export const serviceService = {
     }
 
     await assignmentRepository.replaceForService(id, entries);
+
+    // Notify all members that assignments changed.
+    void notificationService.notifyAssignmentsChanged(id);
 
     return buildRoles(service);
   },
