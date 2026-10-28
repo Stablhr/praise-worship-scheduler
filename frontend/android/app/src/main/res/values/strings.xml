@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">UCJM Praise &amp; Worship</string>
+    <string name="title_activity_main">UCJM Praise &amp; Worship</string>
+    <string name="package_name">com.ucjm.praiseandworship</string>
+    <string name="custom_url_scheme">com.ucjm.praiseandworship</string>
+</resources>

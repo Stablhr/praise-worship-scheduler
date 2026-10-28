@@ -3,6 +3,7 @@ import {Inter, Poppins} from 'next/font/google';
 import './globals.css';
 import {cn} from '@/lib/utils';
 import ReactQueryProvider from '@/lib/provider/ReactQueryProvider';
+import {CapacitorProvider} from '@/components/app/CapacitorProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -65,7 +66,9 @@ export default function RootLayout({
       className={cn('h-full', inter.variable, poppins.variable)}
     >
       <body className="flex min-h-dvh flex-col">
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          <CapacitorProvider>{children}</CapacitorProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );
