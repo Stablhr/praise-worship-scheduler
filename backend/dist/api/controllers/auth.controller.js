@@ -2,26 +2,42 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authController = void 0;
 const auth_service_1 = require("../services/auth.service");
+const member_service_1 = require("../services/member.service");
 const error_1 = require("../utils/error");
+const errorCodes_1 = require("../constants/errorCodes");
 const env_1 = require("../config/env");
-const ACCESS_COOKIE = 'dc_access_token';
-const REFRESH_COOKIE = 'dc_refresh_token';
-function getCookieOptions() {
-    return {
-        httpOnly: true,
-        secure: env_1.env.COOKIE_SECURE === 'true',
-        sameSite: env_1.env.COOKIE_SAMESITE ?? 'lax',
-        path: '/'
-    };
+const cookies_1 = require("../constants/cookies");
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: env_1.env.COOKIE_SECURE === 'true',
+    sameSite: env_1.env.COOKIE_SAMESITE ?? 'lax',
+    path: '/'
+};
+const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+function setSessionCookies(res, tokens) {
+    res.cookie(cookies_1.ACCESS_TOKEN_COOKIE, tokens.accessToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: ACCESS_TOKEN_MAX_AGE
+    });
+    res.cookie(cookies_1.REFRESH_TOKEN_COOKIE, tokens.refreshToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: REFRESH_TOKEN_MAX_AGE
+    });
 }
 exports.authController = {
     async me(req, res, next) {
         try {
             if (!req.auth) {
-                throw new error_1.ApiError(401, 'UNAUTHORIZED', 'Not authenticated');
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Not authenticated');
             }
             if (!req.auth.type) {
-                throw new error_1.ApiError(401, 'UNAUTHORIZED', 'Invalid token');
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Invalid token');
+            }
+            if (req.auth.type === 'member') {
+                const member = await member_service_1.memberService.getProfile(req.auth.userId);
+                res.status(200).json({ user: (0, member_service_1.toMemberProfile)(member) });
+                return;
             }
             res.status(200).json({
                 user: {
@@ -29,6 +45,26 @@ exports.authController = {
                     type: req.auth.type
                 }
             });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    async memberRegister(req, res, next) {
+        try {
+            const { member, accessToken, refreshToken } = await member_service_1.memberService.register(req.body);
+            setSessionCookies(res, { accessToken, refreshToken });
+            res.status(201).json({ user: (0, member_service_1.toMemberProfile)(member) });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    async memberLogin(req, res, next) {
+        try {
+            const { member, accessToken, refreshToken } = await member_service_1.memberService.login(req.body);
+            setSessionCookies(res, { accessToken, refreshToken });
+            res.status(200).json({ user: (0, member_service_1.toMemberProfile)(member) });
         }
         catch (error) {
             next(error);
@@ -64,15 +100,7 @@ exports.authController = {
     async login(req, res, next) {
         try {
             const { accessToken, refreshToken, user, userType } = await auth_service_1.authService.login(req.body.email, req.body.password);
-            const opts = getCookieOptions();
-            res.cookie(ACCESS_COOKIE, accessToken, {
-                ...opts,
-                maxAge: 15 * 60 * 1000
-            });
-            res.cookie(REFRESH_COOKIE, refreshToken, {
-                ...opts,
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
+            setSessionCookies(res, { accessToken, refreshToken });
             res.status(200).json({
                 user: {
                     id: user._id.toString(),
@@ -87,39 +115,34 @@ exports.authController = {
     },
     async refresh(req, res, next) {
         try {
-            const refreshToken = req.cookies?.[REFRESH_COOKIE] ??
+            const refreshToken = req.cookies?.[cookies_1.REFRESH_TOKEN_COOKIE] ??
                 req.body.refreshToken;
             if (!refreshToken) {
-                throw new error_1.ApiError(401, 'UNAUTHORIZED', 'Missing refresh token');
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Missing refresh token');
             }
             const result = await auth_service_1.authService.refreshAccessToken(refreshToken);
-            const opts = getCookieOptions();
-            res.cookie(ACCESS_COOKIE, result.accessToken, {
-                ...opts,
-                maxAge: 15 * 60 * 1000
-            });
-            res.cookie(REFRESH_COOKIE, result.refreshToken, {
-                ...opts,
-                maxAge: 7 * 24 * 60 * 60 * 1000
+            setSessionCookies(res, {
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken
             });
             res.status(200).json({ message: 'Refreshed' });
         }
         catch (error) {
-            const opts = getCookieOptions();
-            res.clearCookie(ACCESS_COOKIE, opts);
-            res.clearCookie(REFRESH_COOKIE, opts);
+            const opts = COOKIE_OPTIONS;
+            res.clearCookie(cookies_1.ACCESS_TOKEN_COOKIE, opts);
+            res.clearCookie(cookies_1.REFRESH_TOKEN_COOKIE, opts);
             next(error);
         }
     },
     async logout(req, res, next) {
         try {
-            const refreshToken = req.cookies?.[REFRESH_COOKIE];
+            const refreshToken = req.cookies?.[cookies_1.REFRESH_TOKEN_COOKIE];
             if (refreshToken) {
                 auth_service_1.authService.logout(refreshToken);
             }
-            const opts = getCookieOptions();
-            res.clearCookie(ACCESS_COOKIE, opts);
-            res.clearCookie(REFRESH_COOKIE, opts);
+            const opts = COOKIE_OPTIONS;
+            res.clearCookie(cookies_1.ACCESS_TOKEN_COOKIE, opts);
+            res.clearCookie(cookies_1.REFRESH_TOKEN_COOKIE, opts);
             res.status(200).json({ message: 'Logged out' });
         }
         catch (error) {
@@ -159,6 +182,21 @@ exports.authController = {
         try {
             await auth_service_1.authService.resetPassword(req.body.email, req.body.code, req.body.newPassword);
             res.status(200).json({ message: 'Password reset successfully' });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    async changePassword(req, res, next) {
+        try {
+            if (!req.auth) {
+                throw new error_1.ApiError(401, errorCodes_1.ErrorCodes.UNAUTHORIZED, 'Not authenticated');
+            }
+            if (req.auth.type === 'member') {
+                throw new error_1.ApiError(403, errorCodes_1.ErrorCodes.FORBIDDEN, 'Password change is not available for team members yet');
+            }
+            await auth_service_1.authService.changePassword(req.auth.userId, req.auth.type ?? 'user', req.body.currentPassword, req.body.newPassword);
+            res.status(200).json({ message: 'Password changed successfully' });
         }
         catch (error) {
             next(error);

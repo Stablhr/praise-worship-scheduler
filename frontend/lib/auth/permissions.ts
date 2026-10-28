@@ -16,3 +16,10 @@ export function isAdmin(
 ): boolean {
   return user?.permission === 'admin';
 }
+
+/** Song leaders (and admins, who can do everything a song leader can). */
+export function isSongLeader(
+  user?: {permission?: MemberPermission} | null
+): boolean {
+  return user?.permission === 'songleader' || user?.permission === 'admin';
+}

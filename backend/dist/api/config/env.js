@@ -20,7 +20,9 @@ const envSchema = zod_1.z.object({
     SMTP_FROM: zod_1.z.string().optional(),
     COOKIE_SECURE: zod_1.z.string().optional(),
     COOKIE_SAMESITE: zod_1.z.enum(['strict', 'lax', 'none']).optional(),
-    CORS_ORIGINS: zod_1.z.string().optional()
+    CORS_ORIGINS: zod_1.z.string().optional(),
+    // Comma separated emails that become the first admins, e.g. "chairman@ucjm.org,pastor@ucjm.org"
+    ADMIN_EMAILS: zod_1.z.string().optional()
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
