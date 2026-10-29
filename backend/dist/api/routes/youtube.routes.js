@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const youtube_controller_1 = require("../controllers/youtube.controller");
+const auth_1 = require("../middleware/auth");
+const rateLimit_1 = require("../middleware/rateLimit");
+const router = (0, express_1.Router)();
+router.use(rateLimit_1.defaultLimiter, auth_1.requireAuth);
+router.get('/search', youtube_controller_1.youtubeController.search);
+exports.default = router;

@@ -22,7 +22,9 @@ const envSchema = zod_1.z.object({
     COOKIE_SAMESITE: zod_1.z.enum(['strict', 'lax', 'none']).optional(),
     CORS_ORIGINS: zod_1.z.string().optional(),
     // Comma separated emails that become the first admins, e.g. "chairman@ucjm.org,pastor@ucjm.org"
-    ADMIN_EMAILS: zod_1.z.string().optional()
+    ADMIN_EMAILS: zod_1.z.string().optional(),
+    // YouTube Data API v3 key for song search
+    YOUTUBE_API_KEY: zod_1.z.string().optional()
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {

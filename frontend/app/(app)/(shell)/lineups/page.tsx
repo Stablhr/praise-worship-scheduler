@@ -1,6 +1,6 @@
 'use client';
 
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {useQueries, useQueryClient} from '@tanstack/react-query';
 import {
   ChevronDown,
@@ -8,8 +8,10 @@ import {
   ExternalLink,
   ListMusic,
   Music,
+  Loader2,
   Pencil,
   Plus,
+  Search,
   Trash2
 } from 'lucide-react';
 import {BottomSheet} from '@/components/app/BottomSheet';
@@ -21,6 +23,8 @@ import {ScreenHeader} from '@/components/app/ScreenHeader';
 import {Skeleton} from '@/components/ui/skeleton';
 import {getFriendlyErrorMessage} from '@/lib/api/getFriendlyErrorMessage';
 import {isSongLeader} from '@/lib/auth/permissions';
+import {searchYouTube} from '@/lib/api/youtubeApi';
+import type {YouTubeVideo} from '@/lib/api/youtubeApi';
 import type {Song, SongChanges, SongType} from '@/lib/api/lineupsApi';
 import {deleteSong, getLineup} from '@/lib/api/lineupsApi';
 import {useMeQuery} from '@/lib/hooks/auth/useMeQuery';
@@ -469,7 +473,57 @@ function AddSongSheet({open, onOpenChange, serviceId}: AddSongSheetProps) {
   const [link, setLink] = useState('');
   const [type, setType] = useState<SongType>('praise');
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<YouTubeVideo[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+
   const addSong = useAddSong(serviceId);
+
+  // Debounced YouTube search.
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      setSearchError(null);
+      try {
+        const results = await searchYouTube(searchQuery.trim());
+        if (!cancelled) setSearchResults(results);
+      } catch (err) {
+        if (!cancelled)
+          setSearchError(
+            getFriendlyErrorMessage(err, 'YouTube search failed. Please try again.')
+          );
+      } finally {
+        if (!cancelled) setIsSearching(false);
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  function handleSelectVideo(video: YouTubeVideo) {
+    setSelectedVideo(video);
+    setTitle(video.title);
+    setLink(video.url);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchError(null);
+  }
+
+  function handleClearSelection() {
+    setSelectedVideo(null);
+    setTitle('');
+    setLink('');
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -484,6 +538,9 @@ function AddSongSheet({open, onOpenChange, serviceId}: AddSongSheetProps) {
       setTitle('');
       setLink('');
       setType('praise');
+      setSearchQuery('');
+      setSearchResults([]);
+      setSelectedVideo(null);
       onOpenChange(false);
     } catch {
       // The button shows the error state.
@@ -495,9 +552,114 @@ function AddSongSheet({open, onOpenChange, serviceId}: AddSongSheetProps) {
       open={open}
       onOpenChange={onOpenChange}
       title="Add a song"
-      description="Add a song to this service's lineup."
+      description="Search YouTube or enter the details manually."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* YouTube search */}
+        <div>
+          <label
+            htmlFor="song-search"
+            className="mb-1 block text-sm font-medium text-text"
+          >
+            Search YouTube
+          </label>
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+              aria-hidden="true"
+            />
+            <input
+              id="song-search"
+              type="text"
+              value={searchQuery}
+              onChange={e => {
+                const value = e.target.value;
+                setSearchQuery(value);
+                if (value.trim().length < 2) {
+                  setSearchResults([]);
+                  setSearchError(null);
+                }
+              }}
+              placeholder="Search for a song..."
+              className="h-12 w-full rounded-card border border-border bg-surface pl-10 pr-4 text-base text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {isSearching && (
+              <Loader2
+                className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted"
+                aria-hidden="true"
+              />
+            )}
+          </div>
+
+          {searchError && (
+            <p className="mt-1 text-sm text-danger">{searchError}</p>
+          )}
+
+          {searchResults.length > 0 && (
+            <ul className="mt-2 max-h-64 space-y-1 overflow-y-auto rounded-card border border-border bg-surface p-1">
+              {searchResults.map(video => (
+                <li key={video.videoId}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectVideo(video)}
+                    className="flex w-full items-center gap-3 rounded-card px-2 py-2 text-left transition-colors duration-150 ease-out active:bg-secondary"
+                  >
+                    {video.thumbnailUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={video.thumbnailUrl}
+                        alt=""
+                        className="h-12 w-20 shrink-0 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded bg-muted-surface text-muted">
+                        <Music className="size-5" aria-hidden="true" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-text">
+                        {video.title}
+                      </p>
+                      <p className="truncate text-xs text-muted">
+                        {video.channelTitle}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedVideo && (
+            <div className="mt-2 flex items-center gap-3 rounded-card border border-primary/30 bg-primary/5 px-3 py-2">
+              {selectedVideo.thumbnailUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selectedVideo.thumbnailUrl}
+                  alt=""
+                  className="h-10 w-16 shrink-0 rounded object-cover"
+                />
+              ) : null}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-text">
+                  {selectedVideo.title}
+                </p>
+                <p className="truncate text-xs text-muted">
+                  {selectedVideo.channelTitle}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                aria-label="Clear selected song"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors duration-150 ease-out active:bg-muted-surface"
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </div>
+
         <div>
           <label
             htmlFor="song-title"

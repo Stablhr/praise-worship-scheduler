@@ -91,6 +91,10 @@ export function getFriendlyErrorMessage(
         return 'Only one member can hold a role for now.';
       case 'FORBIDDEN':
         return 'You do not have permission to do that.';
+      case 'YOUTUBE_NOT_CONFIGURED':
+        return 'YouTube search is not available right now. You can still add a song manually.';
+      case 'YOUTUBE_SEARCH_FAILED':
+        return 'YouTube search failed. Please try again.';
       default:
         break;
     }
