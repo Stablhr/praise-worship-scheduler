@@ -95,6 +95,8 @@ export function getFriendlyErrorMessage(
         return 'YouTube search is not available right now. You can still add a song manually.';
       case 'YOUTUBE_SEARCH_FAILED':
         return 'YouTube search failed. Please try again.';
+      case 'VIDEO_NOT_FOUND':
+        return 'We could not find this video on YouTube.';
       default:
         break;
     }

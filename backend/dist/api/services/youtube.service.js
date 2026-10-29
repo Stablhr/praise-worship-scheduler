@@ -54,5 +54,44 @@ exports.youtubeService = {
             };
         })
             .filter((video) => video !== null);
+    },
+    async getVideo(videoId) {
+        if (!env_1.env.YOUTUBE_API_KEY) {
+            throw new error_1.ApiError(503, 'YOUTUBE_NOT_CONFIGURED', 'YouTube search is not configured.');
+        }
+        const url = new URL('https://www.googleapis.com/youtube/v3/videos');
+        url.searchParams.set('part', 'snippet,contentDetails');
+        url.searchParams.set('id', videoId);
+        url.searchParams.set('key', env_1.env.YOUTUBE_API_KEY);
+        let response;
+        try {
+            response = await fetch(url.toString());
+        }
+        catch {
+            throw new error_1.ApiError(502, 'YOUTUBE_SEARCH_FAILED', 'YouTube search failed. Please try again.');
+        }
+        if (!response.ok) {
+            throw new error_1.ApiError(502, 'YOUTUBE_SEARCH_FAILED', 'YouTube search failed. Please try again.');
+        }
+        const data = (await response.json());
+        const item = (data.items ?? [])[0];
+        if (!item || !item.id) {
+            throw new error_1.ApiError(404, 'VIDEO_NOT_FOUND', 'We could not find this video.');
+        }
+        const snippet = item.snippet;
+        const thumbnailUrl = snippet?.thumbnails?.high?.url ??
+            snippet?.thumbnails?.medium?.url ??
+            snippet?.thumbnails?.default?.url ??
+            '';
+        return {
+            videoId: item.id,
+            title: decodeHtmlEntities(snippet?.title ?? ''),
+            channelTitle: decodeHtmlEntities(snippet?.channelTitle ?? ''),
+            description: snippet?.description ?? '',
+            thumbnailUrl,
+            duration: item.contentDetails?.duration ?? '',
+            publishedAt: snippet?.publishedAt ?? '',
+            url: `https://www.youtube.com/watch?v=${item.id}`
+        };
     }
 };

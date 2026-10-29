@@ -21,5 +21,21 @@ export const youtubeController = {
     } catch (error) {
       next(error);
     }
+  },
+
+  async video(req: Request, res: Response, next: NextFunction) {
+    try {
+      const rawId = req.query.id;
+      const id = typeof rawId === 'string' ? rawId.trim() : '';
+
+      if (!id) {
+        throw new ApiError(400, 'VALIDATION_ERROR', 'Video id is required.');
+      }
+
+      const video = await youtubeService.getVideo(id);
+      res.status(200).json({video});
+    } catch (error) {
+      next(error);
+    }
   }
 };

@@ -7,4 +7,5 @@ const rateLimit_1 = require("../middleware/rateLimit");
 const router = (0, express_1.Router)();
 router.use(rateLimit_1.defaultLimiter, auth_1.requireAuth);
 router.get('/search', youtube_controller_1.youtubeController.search);
+router.get('/video', youtube_controller_1.youtubeController.video);
 exports.default = router;

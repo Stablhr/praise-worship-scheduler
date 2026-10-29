@@ -17,5 +17,19 @@ exports.youtubeController = {
         catch (error) {
             next(error);
         }
+    },
+    async video(req, res, next) {
+        try {
+            const rawId = req.query.id;
+            const id = typeof rawId === 'string' ? rawId.trim() : '';
+            if (!id) {
+                throw new error_1.ApiError(400, 'VALIDATION_ERROR', 'Video id is required.');
+            }
+            const video = await youtube_service_1.youtubeService.getVideo(id);
+            res.status(200).json({ video });
+        }
+        catch (error) {
+            next(error);
+        }
     }
 };

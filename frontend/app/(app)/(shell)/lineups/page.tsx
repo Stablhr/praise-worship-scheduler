@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useMemo, useState} from 'react';
-import {useQueries, useQueryClient} from '@tanstack/react-query';
+import {useQueries, useQuery, useQueryClient} from '@tanstack/react-query';
 import {
   ChevronDown,
   ChevronUp,
@@ -27,6 +27,11 @@ import {searchYouTube} from '@/lib/api/youtubeApi';
 import type {YouTubeVideo} from '@/lib/api/youtubeApi';
 import type {Song, SongChanges, SongType} from '@/lib/api/lineupsApi';
 import {deleteSong, getLineup} from '@/lib/api/lineupsApi';
+import {
+  extractYouTubeId,
+  getYouTubeVideo
+} from '@/lib/api/youtubeApi';
+import type {YouTubeVideoDetails} from '@/lib/api/youtubeApi';
 import {useMeQuery} from '@/lib/hooks/auth/useMeQuery';
 import {useServicesQuery} from '@/lib/hooks/schedule/useServicesQuery';
 import {formatDayLabel} from '@/lib/date/manila';
@@ -78,6 +83,15 @@ export default function LineupsPage() {
     title: string;
   } | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  const [viewingSong, setViewingSong] = useState<Song | null>(null);
+  const viewingVideoId = viewingSong ? extractYouTubeId(viewingSong.link) : null;
+
+  const videoQuery = useQuery({
+    queryKey: ['youtube', 'video', viewingVideoId],
+    queryFn: () => getYouTubeVideo(viewingVideoId as string),
+    enabled: !!viewingVideoId
+  });
 
   const range = tab === 'weekend' ? getWeekendRange() : getAllRange();
 
@@ -134,6 +148,7 @@ export default function LineupsPage() {
       setIsRemoving(false);
     }
   }
+
 
   if (isPending) return <LineupsSkeleton />;
 
@@ -224,6 +239,7 @@ export default function LineupsPage() {
                   onEditSong={(song) =>
                     setEditingSong({serviceId: service.id, song})
                   }
+                  onViewSong={song => setViewingSong(song)}
                   onRemoveSong={(songId, title) =>
                     setRemovingSong({serviceId: service.id, songId, title})
                   }
@@ -242,6 +258,26 @@ export default function LineupsPage() {
             if (!open) setAddingTo(null);
           }}
           serviceId={addingTo}
+        />
+      )}
+
+      {/* Song info sheet */}
+      {viewingSong && (
+        <SongInfoSheet
+          open
+          onOpenChange={open => {
+            if (!open) {
+              setViewingSong(null);
+            }
+          }}
+          song={viewingSong}
+          video={videoQuery.data ?? null}
+          isLoading={videoQuery.isPending && !!viewingVideoId}
+          error={
+            videoQuery.isError
+              ? getFriendlyErrorMessage(videoQuery.error, 'We could not load this video.')
+              : null
+          }
         />
       )}
 
@@ -293,6 +329,7 @@ type ServiceLineupCardProps = {
   onAddSong: () => void;
   onEditSong: (song: Song) => void;
   onRemoveSong: (songId: string, title: string) => void;
+  onViewSong: (song: Song) => void;
 };
 
 function ServiceLineupCard({
@@ -306,7 +343,8 @@ function ServiceLineupCard({
   onDoneEditing,
   onAddSong,
   onEditSong,
-  onRemoveSong
+  onRemoveSong,
+  onViewSong
 }: ServiceLineupCardProps) {
   return (
     <div className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
@@ -348,6 +386,7 @@ function ServiceLineupCard({
                   canEdit={canEdit && isEditing}
                   onEdit={() => onEditSong(song)}
                   onRemove={() => onRemoveSong(song.id, song.title)}
+                  onView={() => onViewSong(song)}
                 />
               ))}
             </ul>
@@ -405,9 +444,10 @@ type SongRowProps = {
   canEdit: boolean;
   onEdit: () => void;
   onRemove: () => void;
+  onView: () => void;
 };
 
-function SongRow({song, index, canEdit, onEdit, onRemove}: SongRowProps) {
+function SongRow({song, index, canEdit, onEdit, onRemove, onView}: SongRowProps) {
   return (
     <li className="flex items-center gap-3 rounded-card bg-muted-surface/50 px-3 py-2.5">
       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
@@ -425,7 +465,16 @@ function SongRow({song, index, canEdit, onEdit, onRemove}: SongRowProps) {
           {song.type === 'praise' ? 'Praise / Fast' : 'Worship / Slow'}
         </span>
       </div>
-      {song.link && (
+      {song.link && extractYouTubeId(song.link) ? (
+        <button
+          type="button"
+          onClick={onView}
+          aria-label={`View details for ${song.title}`}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary transition-colors duration-150 ease-out active:bg-primary/10"
+        >
+          <ExternalLink className="size-4" aria-hidden="true" />
+        </button>
+      ) : song.link ? (
         <a
           href={song.link}
           target="_blank"
@@ -435,7 +484,7 @@ function SongRow({song, index, canEdit, onEdit, onRemove}: SongRowProps) {
         >
           <ExternalLink className="size-4" aria-hidden="true" />
         </a>
-      )}
+      ) : null}
       {canEdit && (
         <button
           type="button"
@@ -871,6 +920,106 @@ function EditSongSheet({open, onOpenChange, serviceId, song}: EditSongSheetProps
           </p>
         )}
       </form>
+    </BottomSheet>
+  );
+}
+
+// ─── Song info sheet ──────────────────────────────────────────────────
+
+type SongInfoSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  song: Song;
+  video: YouTubeVideoDetails | null;
+  isLoading: boolean;
+  error: string | null;
+};
+
+function formatDuration(iso: string): string {
+  if (!iso) return '';
+  const match = iso.match(/PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?/);
+  if (!match) return '';
+  const hours = match[1] ? parseInt(match[1], 10) : 0;
+  const minutes = match[2] ? parseInt(match[2], 10) : 0;
+  const seconds = match[3] ? parseInt(match[3], 10) : 0;
+  const parts: string[] = [];
+  if (hours > 0) parts.push(String(hours));
+  parts.push(String(minutes).padStart(hours > 0 ? 2 : 1, '0'));
+  parts.push(String(seconds).padStart(2, '0'));
+  return parts.join(':');
+}
+
+function SongInfoSheet({
+  open,
+  onOpenChange,
+  song,
+  video,
+  isLoading,
+  error
+}: SongInfoSheetProps) {
+  const videoId = extractYouTubeId(song.link);
+
+  return (
+    <BottomSheet open={open} onOpenChange={onOpenChange} title={song.title}>
+      <div className="space-y-4">
+        {videoId && (
+          <div className="overflow-hidden rounded-card border border-border bg-surface">
+            {isLoading ? (
+              <div className="flex h-44 items-center justify-center">
+                <Loader2 className="size-6 animate-spin text-muted" aria-hidden="true" />
+              </div>
+            ) : video?.thumbnailUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={video.thumbnailUrl}
+                alt={video.title}
+                className="h-44 w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-44 items-center justify-center bg-muted-surface text-muted">
+                <Music className="size-8" aria-hidden="true" />
+              </div>
+            )}
+          </div>
+        )}
+
+        <div>
+          <p className="font-heading text-base font-semibold text-text">
+            {video?.title ?? song.title}
+          </p>
+          {video?.channelTitle && (
+            <p className="mt-0.5 text-sm text-muted">{video.channelTitle}</p>
+          )}
+          {video?.duration && (
+            <p className="mt-0.5 text-xs text-muted">
+              Duration: {formatDuration(video.duration)}
+            </p>
+          )}
+          {video?.publishedAt && (
+            <p className="mt-0.5 text-xs text-muted">
+              Published: {new Date(video.publishedAt).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+
+        {video?.description && (
+          <div className="max-h-40 overflow-y-auto rounded-card border border-border bg-surface p-3 text-sm text-text">
+            {video.description}
+          </div>
+        )}
+
+        {song.link && (
+          <PillButton
+            type="button"
+            onClick={() => window.open(song.link, '_blank', 'noopener,noreferrer')}
+          >
+            <ExternalLink className="mr-1 size-4" aria-hidden="true" />
+            Open on YouTube
+          </PillButton>
+        )}
+      </div>
     </BottomSheet>
   );
 }

@@ -8,5 +8,6 @@ const router = Router();
 router.use(defaultLimiter, requireAuth);
 
 router.get('/search', youtubeController.search);
+router.get('/video', youtubeController.video);
 
 export default router;
