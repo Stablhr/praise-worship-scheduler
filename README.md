@@ -1,4 +1,4 @@
-![Praise and Worship Scheduler — schedule services, assign roles, and manage song lineups](./.github/assets/banner-rounded.png)
+![Praise and Worship Scheduler — schedule services, assign roles, and manage song lineups](./.github/assets/banner-wide.png)
 
 # 🎵 UCJM Praise & Worship Ministry App
 
